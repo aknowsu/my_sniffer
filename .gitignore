@@ -1,0 +1,34 @@
+# Build output
+/build/
+/build-*/
+/out/
+/install/
+
+# CMake bits that can land outside the build dir
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+cmake_install.cmake
+
+# Compiled objects / binaries
+*.o
+*.obj
+*.a
+*.lib
+*.so
+*.dylib
+*.exe
+*.pdb
+
+# Editor / tooling
+/.vscode/
+/.cache/
+*.swp
+
+# Scratch experimentation (not part of the project)
+/sandbox
+/sandbox.cpp
+
+# OS junk
+.DS_Store
+Thumbs.db

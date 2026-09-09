@@ -1,0 +1,36 @@
+#pragma once
+
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <string>
+
+namespace sniffer {
+
+enum class LinkType {
+    Ethernet,
+    RawIPv4,
+};
+
+struct Frame {
+    const std::uint8_t *data;
+    std::size_t         len;
+    std::int64_t        ts_us;
+};
+
+using FrameHandler = std::function<void(const Frame &)>;
+class Capture {
+public:
+    explicit Capture(std::string iface);
+    ~Capture();
+    Capture(const Capture &)            = delete;
+    Capture &operator=(const Capture &) = delete;
+    LinkType link_type() const noexcept;
+    void run(const FrameHandler &on_frame);
+    void stop() noexcept;
+
+private:
+    struct Impl;
+    Impl *impl_;
+};
+} // namespace sniffer
