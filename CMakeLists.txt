@@ -39,7 +39,8 @@ else()
 endif()
 
 target_include_directories(my_sniffer PRIVATE
-    "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/my_func")
 
 if(MSVC)
     target_compile_options(my_sniffer PRIVATE /W4 /WX /permissive-)
