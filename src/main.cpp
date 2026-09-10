@@ -1,6 +1,7 @@
 #include "capture.hpp"
 #include "cli.hpp"
 #include "my_func/my_func.hpp"
+#include "parse/ethernet.hpp"
 
 #include <signal.h>
 
@@ -29,6 +30,22 @@ void install_signal_handlers() {
     sigaction(SIGTERM, &sa, nullptr);
 }
 
+void show(const sniffer::Frame &f, bool verbose) {
+    sniffer::Cursor c(f.data, f.len);
+    if (const auto eth = sniffer::parse_ethernet(c)) {
+        std::printf("%s > %s  %s (0x%04x)  %zu bytes\n",
+                    my::mac_to_text(eth->src).c_str(),
+                    my::mac_to_text(eth->dst).c_str(),
+                    sniffer::ethertype_name(eth->ethertype), eth->ethertype,
+                    f.len);
+    } else {
+        std::printf("[unparsed / truncated]  %zu bytes\n", f.len);
+    }
+    if (verbose) {
+        std::fputs(my::hexdump(f.data, f.len).c_str(), stdout);
+    }
+}
+
 } // namespace
 
 int main(int argc, char **argv) {
@@ -49,10 +66,7 @@ int main(int argc, char **argv) {
         capture.run([&](const sniffer::Frame &f) {
             ++packets;
             bytes += f.len;
-            std::printf("%zu bytes\n", f.len);
-            if (opt.verbose) {
-                std::fputs(my::hexdump(f.data, f.len).c_str(), stdout);
-            }
+            show(f, opt.verbose);
         });
 
         g_capture.store(nullptr);   // capture is about to be destroyed
