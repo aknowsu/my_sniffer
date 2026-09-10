@@ -27,6 +27,18 @@ namespace my {
     // 6 raw bytes -> "aa:bb:cc:dd:ee:ff".
     std::string mac_to_text(const std::uint8_t mac[6]);
 
+    // "aa:bb:cc:dd:ee:ff" -> 6 bytes into `out` (accepts upper/lower hex).
+    // Returns false and leaves `out` untouched on malformed input.
+    bool mac_from_text(std::string_view text, std::uint8_t out[6]);
+
+    // --- raw buffer reads -------------------------------------------------—
+    // Read a big-endian integer straight from packet bytes. Independent of
+    // host endianness. Caller guarantees `p` has at least 1/2/4 readable bytes
+    // (bounds checking is the parser's job).
+    std::uint8_t  read_u8(const std::uint8_t *p);
+    std::uint16_t read_u16be(const std::uint8_t *p);
+    std::uint32_t read_u32be(const std::uint8_t *p);
+
     // --- display -------------------------------------------------------—---
     // Canonical hexdump (offset, 16 bytes hex, ASCII gutter, '\n' per line).
     // Empty input -> "". `base` is added to the printed offset.
