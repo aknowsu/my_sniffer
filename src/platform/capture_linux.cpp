@@ -1,21 +1,20 @@
 #include "capture.hpp"
 #include "my_func/my_func.hpp"
 
-#include <sys/socket.h>   // socket, recv, AF_PACKET, SOCK_RAW
-#include <poll.h>         // poll — generic fd wait (not networking)
-#include <sys/time.h>     // gettimeofday, timeval
-#include <unistd.h>       // close
-
+#include <sys/socket.h>
+#include <poll.h>
+#include <sys/time.h>
+#include <unistd.h>
 #include <atomic>
 #include <cerrno>
-#include <cstring>        // strerror
+#include <cstring>
 #include <stdexcept>
 
 namespace sniffer {
 
 namespace {
-constexpr std::uint16_t kEthPAll     = 0x0003;   // ETH_P_ALL: every protocol
-constexpr int           kPollTimeout = 200;      // ms; safety net for stop()
+constexpr std::uint16_t kEthPAll     = 0x0003;
+constexpr int           kPollTimeout = 200;
 }
 
 struct Capture::Impl {
@@ -49,10 +48,8 @@ void Capture::run(const FrameHandler &on_frame) {
     pfd.events = POLLIN;
 
     for (impl_->running = true; impl_->running;) {
-        // A signal interrupts poll() (EINTR); the timeout is just a safety
-        // net for the tiny race where stop() lands right before this call.
         if (::poll(&pfd, 1, kPollTimeout) <= 0) {
-            continue;   // timeout or EINTR -> re-check running
+            continue;
         }
 
         const ssize_t n = ::recv(impl_->fd, buf, sizeof buf, 0);
