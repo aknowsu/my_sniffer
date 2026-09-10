@@ -29,6 +29,9 @@ cmake_install.cmake
 /sandbox
 /sandbox.cpp
 
+# Personal notes / defense prep
+/REVIEW-QA.md
+
 # OS junk
 .DS_Store
 Thumbs.db
