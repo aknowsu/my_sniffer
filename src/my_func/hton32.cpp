@@ -1,8 +1,9 @@
-#include "my_func.hpp"
+#include "my_func/byteorder.hpp"
 
 #include <bit>
 
 namespace my {
+
 std::uint32_t hton32(std::uint32_t v) {
     if constexpr (std::endian::native == std::endian::big) {
         return v;
@@ -15,4 +16,4 @@ std::uint32_t ntoh32(std::uint32_t v) {
     return hton32(v);
 }
 
-} // namespace my
+}

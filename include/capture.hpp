@@ -19,18 +19,22 @@ struct Frame {
 };
 
 using FrameHandler = std::function<void(const Frame &)>;
+
 class Capture {
 public:
     explicit Capture(std::string iface);
     ~Capture();
+
     Capture(const Capture &)            = delete;
     Capture &operator=(const Capture &) = delete;
+
     LinkType link_type() const noexcept;
-    void run(const FrameHandler &on_frame);
-    void stop() noexcept;
+    void     run(const FrameHandler &on_frame);
+    void     stop() noexcept;
 
 private:
     struct Impl;
     Impl *impl_;
 };
-} // namespace sniffer
+
+}

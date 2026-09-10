@@ -1,20 +1,23 @@
 #include "capture.hpp"
-#include "my_func/my_func.hpp"
+
+#include "my_func/byteorder.hpp"
 
 #include <sys/socket.h>
 #include <poll.h>
 #include <sys/time.h>
 #include <unistd.h>
+
 #include <atomic>
 #include <cerrno>
 #include <cstring>
 #include <stdexcept>
 
 namespace sniffer {
-
 namespace {
+
 constexpr std::uint16_t kEthPAll     = 0x0003;
 constexpr int           kPollTimeout = 200;
+
 }
 
 struct Capture::Impl {
@@ -22,7 +25,7 @@ struct Capture::Impl {
     std::atomic<bool> running{false};
 };
 
-Capture::Capture(std::string /*iface*/) : impl_(nullptr) {
+Capture::Capture(std::string) : impl_(nullptr) {
     const int fd = ::socket(AF_PACKET, SOCK_RAW, my::hton16(kEthPAll));
     if (fd < 0) {
         throw std::runtime_error(std::string("socket(AF_PACKET): ") +
@@ -39,7 +42,9 @@ Capture::~Capture() {
     delete impl_;
 }
 
-LinkType Capture::link_type() const noexcept { return LinkType::Ethernet; }
+LinkType Capture::link_type() const noexcept {
+    return LinkType::Ethernet;
+}
 
 void Capture::run(const FrameHandler &on_frame) {
     std::uint8_t buf[65536];
@@ -54,7 +59,9 @@ void Capture::run(const FrameHandler &on_frame) {
 
         const ssize_t n = ::recv(impl_->fd, buf, sizeof buf, 0);
         if (n < 0) {
-            if (errno == EINTR) continue;
+            if (errno == EINTR) {
+                continue;
+            }
             throw std::runtime_error(std::string("recv: ") + std::strerror(errno));
         }
 
@@ -67,6 +74,8 @@ void Capture::run(const FrameHandler &on_frame) {
     }
 }
 
-void Capture::stop() noexcept { impl_->running = false; }
+void Capture::stop() noexcept {
+    impl_->running = false;
+}
 
-} // namespace sniffer
+}

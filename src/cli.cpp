@@ -13,13 +13,11 @@
 namespace sniffer {
 namespace {
 
-// The whole option catalogue lives in this table. Adding an option is one row
-// here plus one case in the switch in parse_args().
 enum class OptId { Interface, Filter, Write, Read, Verbose, Analyse, Help, Version };
 
 struct OptSpec {
     OptId            id;
-    char             short_name;   // '\0' == no short form
+    char             short_name;
     std::string_view long_name;
     bool             takes_value;
 };
@@ -48,7 +46,7 @@ const OptSpec *find_option(std::string_view name) {
     return nullptr;
 }
 
-} // namespace
+}
 
 void print_usage(const char *argv0) {
     const char *prog = (argv0 && *argv0) ? argv0 : SNIFFER_NAME;
@@ -62,14 +60,12 @@ void print_usage(const char *argv0) {
         "  -i, --interface <name>   Interface to capture on. Defaults to the\n"
         "                           first interface that is up. May also be\n"
         "                           given as a positional argument.\n"
-        "  -f, --filter <expr>      Only show packets matching <expr>\n"
-        "                           (see docs/filter.md for the syntax).\n"
+        "  -f, --filter <expr>      Only show packets matching <expr>.\n"
         "  -w, --write <file>       Save captured packets to <file>.\n"
         "  -r, --read <file>        Replay and analyse a saved capture instead\n"
         "                           of capturing live (no privileges needed).\n"
         "  -v, --verbose            Print a hexdump for every packet.\n"
-        "      --analyse            Run the behavioural analysis engine\n"
-        "                           (spikes, beaconing, anomalies).\n"
+        "      --analyse            Run the behavioural analysis engine.\n"
         "  -h, --help               Show this help and exit.\n"
         "  -V, --version            Show version information and exit.\n"
         "\n"
@@ -108,7 +104,6 @@ ParseResult parse_args(int argc, char **argv) {
             continue;
         }
 
-        // Anything that isn't "-x" / "--long" is the positional interface.
         if (options_ended || arg.size() < 2 || arg[0] != '-') {
             if (positional_seen) {
                 fail("unexpected extra argument", arg);
@@ -119,7 +114,6 @@ ParseResult parse_args(int argc, char **argv) {
             continue;
         }
 
-        // Split "--long=value".
         std::string_view name = arg;
         std::string_view inline_value;
         bool             has_inline = false;
@@ -178,4 +172,4 @@ ParseResult parse_args(int argc, char **argv) {
     return result;
 }
 
-} // namespace sniffer
+}

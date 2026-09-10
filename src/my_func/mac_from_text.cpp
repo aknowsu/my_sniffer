@@ -1,7 +1,6 @@
-#include "my_func.hpp"
+#include "my_func/address.hpp"
 
 namespace my {
-
 namespace {
 
 int hex_digit(char c) {
@@ -11,10 +10,10 @@ int hex_digit(char c) {
     return -1;
 }
 
-} // namespace
+}
 
 bool mac_from_text(std::string_view text, std::uint8_t out[6]) {
-    if (text.size() != 17) {          // "xx:xx:xx:xx:xx:xx"
+    if (text.size() != 17) {
         return false;
     }
 
@@ -38,4 +37,4 @@ bool mac_from_text(std::string_view text, std::uint8_t out[6]) {
     return true;
 }
 
-} // namespace my
+}

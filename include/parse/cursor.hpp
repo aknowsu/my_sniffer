@@ -3,18 +3,10 @@
 #include <cstddef>
 #include <cstdint>
 
-#include "my_func/my_func.hpp"
+#include "my_func/bytes.hpp"
 
 namespace sniffer {
 
-// Bounds-checked forward cursor over a borrowed byte span. A parser reads its
-// header fields from the cursor and leaves it positioned at the payload, ready
-// for the next layer.
-//
-// It never throws and never reads out of range: an over-read marks the cursor
-// "bad" (`ok()` becomes false) and returns 0. So a parser can read a whole
-// header optimistically and check `ok()` once at the end — a truncated packet
-// can't crash it.
 class Cursor {
 public:
     Cursor(const std::uint8_t *data, std::size_t len) noexcept
@@ -45,7 +37,6 @@ public:
         return v;
     }
 
-    // Copy `n` raw bytes out (MAC addresses…) and advance.
     void copy(std::uint8_t *out, std::size_t n) noexcept {
         if (!want(n)) return;
         for (std::size_t i = 0; i < n; ++i) {
@@ -73,4 +64,4 @@ private:
     bool                bad_ = false;
 };
 
-} // namespace sniffer
+}

@@ -1,4 +1,4 @@
-#include "my_func.hpp"
+#include "my_func/bytes.hpp"
 
 namespace my {
 
@@ -17,4 +17,4 @@ std::uint32_t read_u32be(const std::uint8_t *p) {
            (static_cast<std::uint32_t>(p[3]));
 }
 
-} // namespace my
+}

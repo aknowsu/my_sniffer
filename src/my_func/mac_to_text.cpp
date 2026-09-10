@@ -1,4 +1,4 @@
-#include "my_func.hpp"
+#include "my_func/address.hpp"
 
 namespace my {
 
@@ -15,4 +15,4 @@ std::string mac_to_text(const std::uint8_t mac[6]) {
     return out;
 }
 
-} // namespace my
+}

@@ -30,7 +30,7 @@ cmake_install.cmake
 /sandbox.cpp
 
 # Personal notes / defense prep
-/REVIEW-QA.md
+/NOTES.md
 
 # OS junk
 .DS_Store

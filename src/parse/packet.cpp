@@ -1,0 +1,37 @@
+#include "parse/packet.hpp"
+
+#include "parse/cursor.hpp"
+
+namespace sniffer {
+
+ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
+    ParsedPacket p;
+    p.ts_us     = frame.ts_us;
+    p.frame_len = frame.len;
+
+    Cursor c(frame.data, frame.len);
+    std::uint16_t ethertype = ethertype::kIpv4;
+
+    if (link_type == LinkType::Ethernet) {
+        p.eth = parse_ethernet(c);
+        if (!p.eth) {
+            p.truncated = true;
+            return p;
+        }
+        ethertype = p.eth->ethertype;
+    }
+
+    if (ethertype == ethertype::kIpv4) {
+        p.ipv4 = parse_ipv4(c);
+        if (!p.ipv4) {
+            p.truncated = true;
+            return p;
+        }
+    }
+
+    p.payload     = c.ptr();
+    p.payload_len = c.remaining();
+    return p;
+}
+
+}

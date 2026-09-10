@@ -1,4 +1,4 @@
-#include "my_func.hpp"
+#include "my_func/address.hpp"
 
 namespace my {
 
@@ -13,4 +13,4 @@ std::string ipv4_to_text(std::uint32_t addr) {
     return out;
 }
 
-} // namespace my
+}

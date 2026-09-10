@@ -1,4 +1,4 @@
-#include "my_func.hpp"
+#include "my_func/address.hpp"
 
 namespace my {
 
@@ -7,7 +7,6 @@ std::optional<std::uint32_t> ipv4_from_text(std::string_view text) {
     std::size_t   pos  = 0;
 
     for (int octet = 0; octet < 4; ++octet) {
-        // Dot separator between octets (not before the first).
         if (octet != 0) {
             if (pos >= text.size() || text[pos] != '.') {
                 return std::nullopt;
@@ -15,7 +14,6 @@ std::optional<std::uint32_t> ipv4_from_text(std::string_view text) {
             ++pos;
         }
 
-        // 1-3 decimal digits, value 0-255.
         const std::size_t start = pos;
         std::uint32_t     value = 0;
         while (pos < text.size() && text[pos] >= '0' && text[pos] <= '9') {
@@ -31,16 +29,16 @@ std::optional<std::uint32_t> ipv4_from_text(std::string_view text) {
             return std::nullopt;
         }
         if (digits > 1 && text[start] == '0') {
-            return std::nullopt;   // reject leading zero ("01")
+            return std::nullopt;
         }
 
         addr = (addr << 8) | value;
     }
 
     if (pos != text.size()) {
-        return std::nullopt;   // trailing characters
+        return std::nullopt;
     }
     return addr;
 }
 
-} // namespace my
+}

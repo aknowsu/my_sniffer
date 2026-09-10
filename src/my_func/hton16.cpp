@@ -1,4 +1,4 @@
-#include "my_func.hpp"
+#include "my_func/byteorder.hpp"
 
 #include <bit>
 
@@ -13,7 +13,7 @@ std::uint16_t hton16(std::uint16_t v) {
 }
 
 std::uint16_t ntoh16(std::uint16_t v) {
-    return hton16(v);           // same operation in the other direction
+    return hton16(v);
 }
 
-} // namespace my
+}
