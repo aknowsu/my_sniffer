@@ -5,9 +5,9 @@
 namespace my {
 namespace {
 
-constexpr std::size_t bytes_per_row  = 16;
-constexpr std::size_t group_size    = 8;
-constexpr std::size_t line_buf_size  = 24;
+constexpr std::size_t bytes_per_row = 16;
+constexpr std::size_t group_size = 8;
+constexpr std::size_t line_buf_size = 24;
 
 }
 

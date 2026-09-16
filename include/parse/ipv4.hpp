@@ -9,9 +9,9 @@
 namespace sniffer {
 
 namespace ip_proto {
-inline constexpr std::uint8_t Icmp   = 1;
-inline constexpr std::uint8_t Tcp    = 6;
-inline constexpr std::uint8_t Udp    = 17;
+inline constexpr std::uint8_t Icmp = 1;
+inline constexpr std::uint8_t Tcp = 6;
+inline constexpr std::uint8_t Udp = 17;
 inline constexpr std::uint8_t Icmpv6 = 58;
 }
 

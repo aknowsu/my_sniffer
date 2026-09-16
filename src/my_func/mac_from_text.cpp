@@ -3,9 +3,9 @@
 namespace my {
 namespace {
 
-constexpr std::size_t mac_len   = 6;
+constexpr std::size_t mac_len = 6;
 constexpr std::size_t group_len = 3;
-constexpr std::size_t text_len  = mac_len * group_len - 1;
+constexpr std::size_t text_len = mac_len * group_len - 1;
 
 int hex_digit(char c) {
     if (c >= '0' && c <= '9') return c - '0';

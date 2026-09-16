@@ -6,7 +6,7 @@ namespace sniffer {
 
 ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
     ParsedPacket p;
-    p.ts_us     = frame.ts_us;
+    p.ts_us = frame.ts_us;
     p.frame_len = frame.len;
 
     Cursor c(frame.data, frame.len);
@@ -29,7 +29,7 @@ ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
         }
     }
 
-    p.payload     = c.ptr();
+    p.payload = c.ptr();
     p.payload_len = c.remaining();
     return p;
 }

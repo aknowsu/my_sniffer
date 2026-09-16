@@ -5,11 +5,11 @@
 namespace sniffer {
 namespace {
 
-constexpr std::uint8_t  ipv4_version   = 4;
-constexpr std::uint8_t  min_ihl        = 5;
-constexpr std::size_t   bytes_per_word = 4;
-constexpr std::uint16_t flag_df_mask     = 0x4000;
-constexpr std::uint16_t flag_mf_mask     = 0x2000;
+constexpr std::uint8_t ipv4_version = 4;
+constexpr std::uint8_t min_ihl = 5;
+constexpr std::size_t bytes_per_word = 4;
+constexpr std::uint16_t flag_df_mask = 0x4000;
+constexpr std::uint16_t flag_mf_mask = 0x2000;
 constexpr std::uint16_t frag_offset_mask = 0x1FFF;
 
 }
@@ -21,15 +21,15 @@ std::optional<Ipv4Header> parse_ipv4(Cursor &c) {
     const std::uint8_t version_ihl = c.u8();
     h.ihl = version_ihl & 0x0F;
     h.tos = c.u8();
-    h.total_length   = c.u16();
+    h.total_length = c.u16();
     h.identification = c.u16();
 
     const std::uint16_t flags_frag = c.u16();
-    h.flag_df     = (flags_frag & flag_df_mask) != 0;
-    h.flag_mf     = (flags_frag & flag_mf_mask) != 0;
+    h.flag_df = (flags_frag & flag_df_mask) != 0;
+    h.flag_mf = (flags_frag & flag_mf_mask) != 0;
     h.frag_offset = flags_frag & frag_offset_mask;
 
-    h.ttl      = c.u8();
+    h.ttl = c.u8();
     h.protocol = c.u8();
     h.checksum = c.u16();
     h.src = c.u32();

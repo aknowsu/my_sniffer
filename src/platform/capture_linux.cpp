@@ -15,10 +15,10 @@
 namespace sniffer {
 namespace {
 
-constexpr std::uint16_t eth_p_all             = 0x0003;
-constexpr int           poll_timeout_ms       = 200;
-constexpr std::size_t   capture_buffer_size   = 65536;
-constexpr std::int64_t  microseconds_per_second = 1'000'000;
+constexpr std::uint16_t eth_p_all = 0x0003;
+constexpr int poll_timeout_ms = 200;
+constexpr std::size_t capture_buffer_size = 65536;
+constexpr std::int64_t microseconds_per_second = 1'000'000;
 
 }
 
@@ -51,7 +51,7 @@ LinkType Capture::link_type() const noexcept {
 void Capture::run(const FrameHandler &on_frame) {
     std::uint8_t buf[capture_buffer_size];
     pollfd       pfd{};
-    pfd.fd     = impl_->fd;
+    pfd.fd = impl_->fd;
     pfd.events = POLLIN;
 
     for (impl_->running = true; impl_->running;) {

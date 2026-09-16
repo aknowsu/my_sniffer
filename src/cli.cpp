@@ -88,13 +88,13 @@ ParseResult parse_args(int argc, char **argv) {
             std::fprintf(stderr, ": %.*s", static_cast<int>(arg.size()), arg.data());
         }
         std::fprintf(stderr, "\nTry '%s --help' for more information.\n", prog);
-        result.action    = ParseResult::Action::Exit;
+        result.action = ParseResult::Action::Exit;
         result.exit_code = 2;
     };
 
     Options &opt = result.options;
     bool positional_seen = false;
-    bool options_ended   = false;
+    bool options_ended = false;
 
     for (int i = 1; i < argc; ++i) {
         const std::string_view arg = argv[i];
@@ -109,7 +109,7 @@ ParseResult parse_args(int argc, char **argv) {
                 fail("unexpected extra argument", arg);
                 return result;
             }
-            opt.interface   = std::string(arg);
+            opt.interface = std::string(arg);
             positional_seen = true;
             continue;
         }
@@ -119,9 +119,9 @@ ParseResult parse_args(int argc, char **argv) {
         bool             has_inline = false;
         if (arg.rfind("--", 0) == 0) {
             if (const auto eq = arg.find('='); eq != std::string_view::npos) {
-                name         = arg.substr(0, eq);
+                name = arg.substr(0, eq);
                 inline_value = arg.substr(eq + 1);
-                has_inline   = true;
+                has_inline = true;
             }
         }
 

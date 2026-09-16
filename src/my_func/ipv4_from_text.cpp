@@ -4,7 +4,7 @@ namespace my {
 
 std::optional<std::uint32_t> ipv4_from_text(std::string_view text) {
     std::uint32_t addr = 0;
-    std::size_t   pos  = 0;
+    std::size_t   pos = 0;
 
     for (int octet = 0; octet < 4; ++octet) {
         if (octet != 0) {

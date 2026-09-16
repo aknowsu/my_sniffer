@@ -5,7 +5,7 @@
 namespace my {
 namespace {
 
-constexpr int           word_bits    = 16;
+constexpr int word_bits = 16;
 constexpr std::uint32_t low_word_mask = (1u << word_bits) - 1;
 
 }

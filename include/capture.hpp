@@ -25,7 +25,7 @@ public:
     explicit Capture(std::string iface);
     ~Capture();
 
-    Capture(const Capture &)            = delete;
+    Capture(const Capture &) = delete;
     Capture &operator=(const Capture &) = delete;
 
     LinkType link_type() const noexcept;
