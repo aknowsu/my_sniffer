@@ -3,6 +3,8 @@
 #include "my_func/address.hpp"
 #include "my_func/hexdump.hpp"
 
+#include <string>
+
 namespace sniffer {
 namespace {
 
@@ -24,6 +26,54 @@ const char *ip_protocol_name(std::uint8_t proto) {
         case ip_proto::Icmpv6: return "ICMPv6";
         default:               return "unknown";
     }
+}
+
+std::string hex_u8(std::uint8_t v) {
+    char buf[8];
+    std::snprintf(buf, sizeof buf, "0x%02x", v);
+    return buf;
+}
+
+std::string hex_u16(std::uint16_t v) {
+    char buf[8];
+    std::snprintf(buf, sizeof buf, "0x%04x", v);
+    return buf;
+}
+
+void field(std::FILE *out, const char *name, const std::string &value) {
+    std::fprintf(out, "    %-19s %s\n", name, value.c_str());
+}
+
+void print_ethernet_fields(std::FILE *out, const EthernetHeader &eth) {
+    field(out, "ethernet.dst", my::mac_to_text(eth.dst));
+    field(out, "ethernet.src", my::mac_to_text(eth.src));
+    field(out, "ethernet.ethertype",
+         hex_u16(eth.ethertype) + " (" + ethertype_name(eth.ethertype) + ")");
+    if (eth.vlan_id != 0) {
+        field(out, "ethernet.vlan_id", std::to_string(eth.vlan_id));
+    }
+}
+
+void print_ipv4_fields(std::FILE *out, const Ipv4Header &ip) {
+    field(out, "ipv4.version", "4");
+    field(out, "ipv4.header_len", std::to_string(ip.header_len) + " bytes");
+    field(out, "ipv4.tos", hex_u8(ip.tos));
+    field(out, "ipv4.total_length", std::to_string(ip.total_length));
+    field(out, "ipv4.identification", hex_u16(ip.identification));
+
+    std::string flags;
+    if (ip.flag_df) flags += "DF ";
+    if (ip.flag_mf) flags += "MF";
+    if (!flags.empty() && flags.back() == ' ') flags.pop_back();
+    field(out, "ipv4.flags", flags.empty() ? "-" : flags);
+
+    field(out, "ipv4.frag_offset", std::to_string(ip.frag_offset));
+    field(out, "ipv4.ttl", std::to_string(ip.ttl));
+    field(out, "ipv4.protocol",
+         std::to_string(ip.protocol) + " (" + ip_protocol_name(ip.protocol) + ")");
+    field(out, "ipv4.checksum", hex_u16(ip.checksum) + (ip.checksum_ok ? " (ok)" : " (bad)"));
+    field(out, "ipv4.src", my::ipv4_to_text(ip.src));
+    field(out, "ipv4.dst", my::ipv4_to_text(ip.dst));
 }
 
 }
@@ -49,7 +99,14 @@ void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
     }
 
     if (opts.verbose) {
+        if (pkt.eth) {
+            print_ethernet_fields(out, *pkt.eth);
+        }
+        if (pkt.ipv4) {
+            print_ipv4_fields(out, *pkt.ipv4);
+        }
         std::fputs(my::hexdump(frame.data, frame.len).c_str(), out);
+        std::fputc('\n', out);
     }
 }
 
