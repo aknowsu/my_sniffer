@@ -27,6 +27,14 @@ ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
             p.truncated = true;
             return p;
         }
+
+        if (p.ipv4->protocol == ip_proto::Tcp) {
+            p.tcp = parse_tcp(c, p.ipv4->src, p.ipv4->dst);
+            if (!p.tcp) {
+                p.truncated = true;
+                return p;
+            }
+        }
     }
 
     p.payload = c.ptr();
