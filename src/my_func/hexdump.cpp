@@ -3,13 +3,23 @@
 #include <cstdio>
 
 namespace my {
+namespace {
+
+constexpr std::size_t kBytesPerRow  = 16;
+constexpr std::size_t kGroupSize    = 8;
+constexpr std::size_t kLineBufSize  = 24;
+
+}
 
 std::string hexdump(const std::uint8_t *data, std::size_t len, std::size_t base) {
     std::string out;
-    char        buf[24];
+    char        buf[kLineBufSize];
 
-    for (std::size_t i = 0; i < (len + 15) / 16 * 16; ++i) {
-        if (i % 16 == 0) {
+    const std::size_t rows = (len + kBytesPerRow - 1) / kBytesPerRow * kBytesPerRow;
+    for (std::size_t i = 0; i < rows; ++i) {
+        const std::size_t col = i % kBytesPerRow;
+
+        if (col == 0) {
             std::snprintf(buf, sizeof buf, "%08zx  ", base + i);
             out += buf;
         }
@@ -19,10 +29,10 @@ std::string hexdump(const std::uint8_t *data, std::size_t len, std::size_t base)
         } else {
             out += "   ";
         }
-        if (i % 16 == 7) {
+        if (col == kGroupSize - 1) {
             out += ' ';
         }
-        if (i % 16 == 15) {
+        if (col == kBytesPerRow - 1) {
             while (!out.empty() && out.back() == ' ') {
                 out.pop_back();
             }
