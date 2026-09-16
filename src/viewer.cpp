@@ -46,12 +46,6 @@ std::string tcp_flags_text(const TcpFlags &f) {
     return s.empty() ? "-" : s;
 }
 
-std::string hex_u8(std::uint8_t v) {
-    char buf[8];
-    std::snprintf(buf, sizeof buf, "0x%02x", v);
-    return buf;
-}
-
 std::string hex_u16(std::uint16_t v) {
     char buf[8];
     std::snprintf(buf, sizeof buf, "0x%04x", v);
@@ -73,12 +67,8 @@ void print_ethernet_fields(std::FILE *out, const EthernetHeader &eth) {
 }
 
 void print_ipv4_fields(std::FILE *out, const Ipv4Header &ip) {
-    field(out, "ipv4.version", "4");
-    field(out, "ipv4.ihl", std::to_string(ip.ihl));
-    field(out, "ipv4.header_len", std::to_string(ip.header_len) + " bytes");
-    field(out, "ipv4.tos", hex_u8(ip.tos));
+    field(out, "ipv4.ihl", std::to_string(ip.ihl) + " (" + std::to_string(ip.header_len) + " bytes)");
     field(out, "ipv4.total_length", std::to_string(ip.total_length));
-    field(out, "ipv4.identification", hex_u16(ip.identification));
 
     std::string flags;
     if (ip.flag_df) flags += "DF ";
@@ -86,7 +76,11 @@ void print_ipv4_fields(std::FILE *out, const Ipv4Header &ip) {
     if (!flags.empty() && flags.back() == ' ') flags.pop_back();
     field(out, "ipv4.flags", flags.empty() ? "-" : flags);
 
-    field(out, "ipv4.frag_offset", std::to_string(ip.frag_offset));
+    if (ip.flag_mf || ip.frag_offset != 0) {
+        field(out, "ipv4.identification", hex_u16(ip.identification));
+        field(out, "ipv4.frag_offset", std::to_string(ip.frag_offset));
+    }
+
     field(out, "ipv4.ttl", std::to_string(ip.ttl));
     field(out, "ipv4.protocol",
          std::to_string(ip.protocol) + " (" + ip_protocol_name(ip.protocol) + ")");
@@ -99,13 +93,17 @@ void print_tcp_fields(std::FILE *out, const TcpHeader &tcp) {
     field(out, "tcp.src_port", std::to_string(tcp.src_port));
     field(out, "tcp.dst_port", std::to_string(tcp.dst_port));
     field(out, "tcp.seq", std::to_string(tcp.seq));
-    field(out, "tcp.ack", std::to_string(tcp.ack));
+    if (tcp.flags.ack) {
+        field(out, "tcp.ack", std::to_string(tcp.ack));
+    }
     field(out, "tcp.data_offset",
          std::to_string(tcp.data_offset) + " (" + std::to_string(tcp.header_len) + " bytes)");
     field(out, "tcp.flags", tcp_flags_text(tcp.flags));
     field(out, "tcp.window", std::to_string(tcp.window));
     field(out, "tcp.checksum", hex_u16(tcp.checksum) + (tcp.checksum_ok ? " (valid)" : " (invalid)"));
-    field(out, "tcp.urgent_pointer", std::to_string(tcp.urgent_pointer));
+    if (tcp.flags.urg) {
+        field(out, "tcp.urgent_pointer", std::to_string(tcp.urgent_pointer));
+    }
 }
 
 }
