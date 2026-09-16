@@ -5,19 +5,19 @@
 namespace my {
 namespace {
 
-constexpr std::size_t kBytesPerRow  = 16;
-constexpr std::size_t kGroupSize    = 8;
-constexpr std::size_t kLineBufSize  = 24;
+constexpr std::size_t bytes_per_row  = 16;
+constexpr std::size_t group_size    = 8;
+constexpr std::size_t line_buf_size  = 24;
 
 }
 
 std::string hexdump(const std::uint8_t *data, std::size_t len, std::size_t base) {
     std::string out;
-    char        buf[kLineBufSize];
+    char buf[line_buf_size];
 
-    const std::size_t rows = (len + kBytesPerRow - 1) / kBytesPerRow * kBytesPerRow;
+    const std::size_t rows = (len + bytes_per_row - 1) / bytes_per_row * bytes_per_row;
     for (std::size_t i = 0; i < rows; ++i) {
-        const std::size_t col = i % kBytesPerRow;
+        const std::size_t col = i % bytes_per_row;
 
         if (col == 0) {
             std::snprintf(buf, sizeof buf, "%08zx  ", base + i);
@@ -29,10 +29,10 @@ std::string hexdump(const std::uint8_t *data, std::size_t len, std::size_t base)
         } else {
             out += "   ";
         }
-        if (col == kGroupSize - 1) {
+        if (col == group_size - 1) {
             out += ' ';
         }
-        if (col == kBytesPerRow - 1) {
+        if (col == bytes_per_row - 1) {
             while (!out.empty() && out.back() == ' ') {
                 out.pop_back();
             }

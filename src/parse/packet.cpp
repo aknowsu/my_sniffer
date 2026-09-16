@@ -10,7 +10,7 @@ ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
     p.frame_len = frame.len;
 
     Cursor c(frame.data, frame.len);
-    std::uint16_t ethertype = ethertype::kIpv4;
+    std::uint16_t ethertype = ethertype::Ipv4;
 
     if (link_type == LinkType::Ethernet) {
         p.eth = parse_ethernet(c);
@@ -21,7 +21,7 @@ ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
         ethertype = p.eth->ethertype;
     }
 
-    if (ethertype == ethertype::kIpv4) {
+    if (ethertype == ethertype::Ipv4) {
         p.ipv4 = parse_ipv4(c);
         if (!p.ipv4) {
             p.truncated = true;

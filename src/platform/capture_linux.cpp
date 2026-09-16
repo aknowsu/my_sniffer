@@ -15,8 +15,10 @@
 namespace sniffer {
 namespace {
 
-constexpr std::uint16_t kEthPAll     = 0x0003;
-constexpr int           kPollTimeout = 200;
+constexpr std::uint16_t eth_p_all             = 0x0003;
+constexpr int           poll_timeout_ms       = 200;
+constexpr std::size_t   capture_buffer_size   = 65536;
+constexpr std::int64_t  microseconds_per_second = 1'000'000;
 
 }
 
@@ -26,7 +28,7 @@ struct Capture::Impl {
 };
 
 Capture::Capture(std::string) : impl_(nullptr) {
-    const int fd = ::socket(AF_PACKET, SOCK_RAW, my::hton16(kEthPAll));
+    const int fd = ::socket(AF_PACKET, SOCK_RAW, my::hton16(eth_p_all));
     if (fd < 0) {
         throw std::runtime_error(std::string("socket(AF_PACKET): ") +
                                  std::strerror(errno));
@@ -47,13 +49,13 @@ LinkType Capture::link_type() const noexcept {
 }
 
 void Capture::run(const FrameHandler &on_frame) {
-    std::uint8_t buf[65536];
+    std::uint8_t buf[capture_buffer_size];
     pollfd       pfd{};
     pfd.fd     = impl_->fd;
     pfd.events = POLLIN;
 
     for (impl_->running = true; impl_->running;) {
-        if (::poll(&pfd, 1, kPollTimeout) <= 0) {
+        if (::poll(&pfd, 1, poll_timeout_ms) <= 0) {
             continue;
         }
 
@@ -68,7 +70,7 @@ void Capture::run(const FrameHandler &on_frame) {
         timeval now{};
         ::gettimeofday(&now, nullptr);
         const Frame frame{buf, static_cast<std::size_t>(n),
-                          static_cast<std::int64_t>(now.tv_sec) * 1000000 +
+                          static_cast<std::int64_t>(now.tv_sec) * microseconds_per_second +
                               now.tv_usec};
         on_frame(frame);
     }

@@ -25,19 +25,11 @@ Libraries unrelated to networking (CLI parsing, logging, tests) may be used.
 | User-defined filter / search language | planned |
 | Behavioural analysis (spikes, beaconing, anomalies) | planned |
 | Capture logging & storage | planned |
-| Bonus: ARP / ICMP / IPv6, DNS / HTTP, sniffer detection, TUI | planned |
 
 ## Supported platforms
 
-- **Linux** — primary. `AF_PACKET` raw sockets, full Ethernet frames.
-- **Windows** — second platform. `SOCK_RAW` + `WSAIoctl(SIO_RCVALL)`.
-
-Because Npcap / WinPcap are networking libraries (forbidden), the Windows
-backend uses plain raw sockets. That has consequences: **no Ethernet
-header, no ARP, IPv4 only, requires Administrator**. On Windows the parser
-therefore starts at the IPv4 layer (`LinkType::RawIPv4`). Whether this
-satisfies the subject's "Ethernet" requirement on the second OS is to be
-confirmed with the teaching team.
+- **Linux** — primary.
+- **Windows** — second platform.
 
 ## Requirements
 

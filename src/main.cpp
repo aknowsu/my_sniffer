@@ -33,7 +33,7 @@ void install_signal_handlers() {
 
 int main(int argc, char **argv) {
     const sniffer::ParseResult parsed = sniffer::parse_args(argc, argv);
-    if (parsed.action == sniffer::ParseResult::Action::kExit) {
+    if (parsed.action == sniffer::ParseResult::Action::Exit) {
         return parsed.exit_code;
     }
     const sniffer::Options    &opt  = parsed.options;

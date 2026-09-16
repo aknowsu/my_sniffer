@@ -22,7 +22,7 @@ struct OptSpec {
     bool             takes_value;
 };
 
-constexpr OptSpec kOptions[] = {
+constexpr OptSpec option_table[] = {
     {OptId::Interface, 'i',  "interface", true },
     {OptId::Filter,    'f',  "filter",    true },
     {OptId::Write,     'w',  "write",     true },
@@ -34,7 +34,7 @@ constexpr OptSpec kOptions[] = {
 };
 
 const OptSpec *find_option(std::string_view name) {
-    for (const OptSpec &o : kOptions) {
+    for (const OptSpec &o : option_table) {
         const bool as_short = name.size() == 2 && name[0] == '-' &&
                               o.short_name != '\0' && name[1] == o.short_name;
         const bool as_long = name.size() > 2 && name.substr(0, 2) == "--" &&
@@ -88,7 +88,7 @@ ParseResult parse_args(int argc, char **argv) {
             std::fprintf(stderr, ": %.*s", static_cast<int>(arg.size()), arg.data());
         }
         std::fprintf(stderr, "\nTry '%s --help' for more information.\n", prog);
-        result.action    = ParseResult::Action::kExit;
+        result.action    = ParseResult::Action::Exit;
         result.exit_code = 2;
     };
 
@@ -149,11 +149,11 @@ ParseResult parse_args(int argc, char **argv) {
         switch (spec->id) {
         case OptId::Help:
             print_usage(prog);
-            result.action = ParseResult::Action::kExit;
+            result.action = ParseResult::Action::Exit;
             return result;
         case OptId::Version:
             print_version();
-            result.action = ParseResult::Action::kExit;
+            result.action = ParseResult::Action::Exit;
             return result;
         case OptId::Verbose:   opt.verbose = true; break;
         case OptId::Analyse:   opt.analyse = true; break;

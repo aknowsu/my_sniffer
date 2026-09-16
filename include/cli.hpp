@@ -15,7 +15,7 @@ struct Options {
 };
 
 struct ParseResult {
-    enum class Action { kProceed, kExit } action = Action::kProceed;
+    enum class Action { Proceed, Exit } action = Action::Proceed;
     int     exit_code = 0;
     Options options;
 };

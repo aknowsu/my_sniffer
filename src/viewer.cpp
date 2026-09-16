@@ -8,21 +8,21 @@ namespace {
 
 const char *ethertype_name(std::uint16_t et) {
     switch (et) {
-        case ethertype::kIpv4: return "IPv4";
-        case ethertype::kArp:  return "ARP";
-        case ethertype::kIpv6: return "IPv6";
-        case ethertype::kVlan: return "VLAN";
-        default:               return "unknown";
+        case ethertype::Ipv4: return "IPv4";
+        case ethertype::Arp:  return "ARP";
+        case ethertype::Ipv6: return "IPv6";
+        case ethertype::Vlan: return "VLAN";
+        default:              return "unknown";
     }
 }
 
 const char *ip_protocol_name(std::uint8_t proto) {
     switch (proto) {
-        case ip_proto::kIcmp:   return "ICMP";
-        case ip_proto::kTcp:    return "TCP";
-        case ip_proto::kUdp:    return "UDP";
-        case ip_proto::kIcmpv6: return "ICMPv6";
-        default:                return "unknown";
+        case ip_proto::Icmp:   return "ICMP";
+        case ip_proto::Tcp:    return "TCP";
+        case ip_proto::Udp:    return "UDP";
+        case ip_proto::Icmpv6: return "ICMPv6";
+        default:               return "unknown";
     }
 }
 
