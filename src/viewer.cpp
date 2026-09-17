@@ -106,6 +106,17 @@ void print_tcp_fields(std::FILE *out, const TcpHeader &tcp) {
     }
 }
 
+void print_udp_fields(std::FILE *out, const UdpHeader &udp) {
+    field(out, "udp.src_port", std::to_string(udp.src_port));
+    field(out, "udp.dst_port", std::to_string(udp.dst_port));
+    field(out, "udp.length", std::to_string(udp.length));
+    if (udp.checksum_present) {
+        field(out, "udp.checksum", hex_u16(udp.checksum) + (udp.checksum_ok ? " (valid)" : " (invalid)"));
+    } else {
+        field(out, "udp.checksum", "not set");
+    }
+}
+
 }
 
 void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
@@ -117,6 +128,11 @@ void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
                      my::ipv4_to_text(pkt.ipv4->src).c_str(), pkt.tcp->src_port,
                      my::ipv4_to_text(pkt.ipv4->dst).c_str(), pkt.tcp->dst_port,
                      tcp_flags_text(pkt.tcp->flags).c_str(),
+                     pkt.ipv4->ttl, frame.len, suffix);
+    } else if (pkt.udp) {
+        std::fprintf(out, "%s:%u > %s:%u  UDP  ttl=%u  %zu bytes%s\n",
+                     my::ipv4_to_text(pkt.ipv4->src).c_str(), pkt.udp->src_port,
+                     my::ipv4_to_text(pkt.ipv4->dst).c_str(), pkt.udp->dst_port,
                      pkt.ipv4->ttl, frame.len, suffix);
     } else if (pkt.ipv4) {
         std::fprintf(out, "%s > %s  %s  ttl=%u  %zu bytes%s\n",
@@ -143,6 +159,9 @@ void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
         }
         if (pkt.tcp) {
             print_tcp_fields(out, *pkt.tcp);
+        }
+        if (pkt.udp) {
+            print_udp_fields(out, *pkt.udp);
         }
         std::fputs(my::hexdump(frame.data, frame.len).c_str(), out);
         std::fputc('\n', out);

@@ -29,8 +29,14 @@ ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
         }
 
         if (p.ipv4->protocol == ip_proto::Tcp) {
-            p.tcp = parse_tcp(c, p.ipv4->src, p.ipv4->dst);
+            p.tcp = parse_tcp(c, p.ipv4->src, p.ipv4->dst, p.ipv4->payload_len);
             if (!p.tcp) {
+                p.truncated = true;
+                return p;
+            }
+        } else if (p.ipv4->protocol == ip_proto::Udp) {
+            p.udp = parse_udp(c, p.ipv4->src, p.ipv4->dst);
+            if (!p.udp) {
                 p.truncated = true;
                 return p;
             }

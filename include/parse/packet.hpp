@@ -8,6 +8,7 @@
 #include "parse/ethernet.hpp"
 #include "parse/ipv4.hpp"
 #include "parse/tcp.hpp"
+#include "parse/udp.hpp"
 
 namespace sniffer {
 
@@ -18,6 +19,7 @@ struct ParsedPacket {
     std::optional<EthernetHeader> eth;
     std::optional<Ipv4Header> ipv4;
     std::optional<TcpHeader> tcp;
+    std::optional<UdpHeader> udp;
 
     const std::uint8_t *payload = nullptr;
     std::size_t payload_len = 0;
