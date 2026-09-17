@@ -37,7 +37,7 @@ int main(int argc, char **argv) {
         return parsed.exit_code;
     }
     const sniffer::Options    &opt = parsed.options;
-    const sniffer::ViewOptions view{opt.verbose};
+    const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
     std::uint64_t packets = 0;
     std::uint64_t bytes = 0;

@@ -13,7 +13,7 @@
 namespace sniffer {
 namespace {
 
-enum class OptId { Interface, Filter, Write, Read, Verbose, Analyse, Help, Version };
+enum class OptId { Interface, Filter, Write, Read, Verbose, Analyse, DecodedOnly, Help, Version };
 
 struct OptSpec {
     OptId            id;
@@ -29,6 +29,7 @@ constexpr OptSpec option_table[] = {
     {OptId::Read,      'r',  "read",      true },
     {OptId::Verbose,   'v',  "verbose",   false},
     {OptId::Analyse,   '\0', "analyse",   false},
+    {OptId::DecodedOnly, '\0', "decoded-only", false},
     {OptId::Help,      'h',  "help",      false},
     {OptId::Version,   'V',  "version",   false},
 };
@@ -66,6 +67,8 @@ void print_usage(const char *argv0) {
         "                           of capturing live (no privileges needed).\n"
         "  -v, --verbose            Print a hexdump for every packet.\n"
         "      --analyse            Run the behavioural analysis engine.\n"
+        "      --decoded-only       Only show packets whose protocol is\n"
+        "                           decoded (hide the 'unknown' ones).\n"
         "  -h, --help               Show this help and exit.\n"
         "  -V, --version            Show version information and exit.\n"
         "\n"
@@ -157,6 +160,7 @@ ParseResult parse_args(int argc, char **argv) {
             return result;
         case OptId::Verbose:   opt.verbose = true; break;
         case OptId::Analyse:   opt.analyse = true; break;
+        case OptId::DecodedOnly: opt.decoded_only = true; break;
         case OptId::Interface: opt.interface = std::string(value); positional_seen = true; break;
         case OptId::Filter:    opt.filter = std::string(value); break;
         case OptId::Write:     opt.write_path = std::string(value); break;

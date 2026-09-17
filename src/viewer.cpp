@@ -3,6 +3,7 @@
 #include "my_func/address.hpp"
 #include "my_func/hexdump.hpp"
 
+#include <cstring>
 #include <string>
 
 namespace sniffer {
@@ -106,6 +107,19 @@ void print_tcp_fields(std::FILE *out, const TcpHeader &tcp) {
     }
 }
 
+bool is_decoded(const ParsedPacket &pkt) {
+    if (pkt.tcp || pkt.udp) {
+        return true;
+    }
+    if (pkt.ipv4) {
+        return std::strcmp(ip_protocol_name(pkt.ipv4->protocol), "unknown") != 0;
+    }
+    if (pkt.eth) {
+        return std::strcmp(ethertype_name(pkt.eth->ethertype), "unknown") != 0;
+    }
+    return false;
+}
+
 void print_udp_fields(std::FILE *out, const UdpHeader &udp) {
     field(out, "udp.src_port", std::to_string(udp.src_port));
     field(out, "udp.dst_port", std::to_string(udp.dst_port));
@@ -121,7 +135,7 @@ void print_udp_fields(std::FILE *out, const UdpHeader &udp) {
 
 void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
                   const ViewOptions &opts) {
-    if (pkt.eth && pkt.eth->ethertype == ethertype::Ipv6) {
+    if (opts.decoded_only && !is_decoded(pkt)) {
         return;
     }
 

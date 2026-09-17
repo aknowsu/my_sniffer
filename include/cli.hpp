@@ -12,6 +12,7 @@ struct Options {
     std::optional<std::string> read_path;
     bool                       verbose = false;
     bool                       analyse = false;
+    bool                       decoded_only = false;
 };
 
 struct ParseResult {
