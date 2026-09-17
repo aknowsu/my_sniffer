@@ -121,6 +121,10 @@ void print_udp_fields(std::FILE *out, const UdpHeader &udp) {
 
 void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
                   const ViewOptions &opts) {
+    if (pkt.eth && pkt.eth->ethertype == ethertype::Ipv6) {
+        return;
+    }
+
     const char *suffix = pkt.truncated ? "  [truncated]" : "";
 
     if (pkt.tcp) {
