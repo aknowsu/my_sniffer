@@ -9,8 +9,8 @@
 namespace sniffer {
 namespace {
 
-const char *ethertype_name(std::uint16_t et) {
-    switch (et) {
+const char *ethertype_name(std::uint16_t type) {
+    switch (type) {
         case ethertype::Ipv4: return "IPv4";
         case ethertype::Arp:  return "ARP";
         case ethertype::Vlan: return "VLAN";
@@ -28,28 +28,28 @@ const char *ip_protocol_name(std::uint8_t proto) {
     }
 }
 
-std::string tcp_flags_text(const TcpFlags &f) {
-    std::string s;
+std::string tcp_flags_text(const TcpFlags &flags) {
+    std::string str;
     auto add = [&](bool set, const char *name) {
         if (!set) return;
-        if (!s.empty()) s += ',';
-        s += name;
+        if (!str.empty()) str += ',';
+        str += name;
     };
-    add(f.syn, "SYN");
-    add(f.ack, "ACK");
-    add(f.fin, "FIN");
-    add(f.rst, "RST");
-    add(f.psh, "PSH");
-    add(f.urg, "URG");
-    add(f.ece, "ECE");
-    add(f.cwr, "CWR");
-    add(f.ns, "NS");
-    return s.empty() ? "-" : s;
+    add(flags.syn, "SYN");
+    add(flags.ack, "ACK");
+    add(flags.fin, "FIN");
+    add(flags.rst, "RST");
+    add(flags.psh, "PSH");
+    add(flags.urg, "URG");
+    add(flags.ece, "ECE");
+    add(flags.cwr, "CWR");
+    add(flags.ns, "NS");
+    return str.empty() ? "-" : str;
 }
 
-std::string hex_u16(std::uint16_t v) {
+std::string hex_u16(std::uint16_t value) {
     char buf[8];
-    std::snprintf(buf, sizeof buf, "0x%04x", v);
+    std::snprintf(buf, sizeof buf, "0x%04x", value);
     return buf;
 }
 

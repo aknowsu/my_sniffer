@@ -5,47 +5,47 @@
 namespace sniffer {
 
 ParsedPacket parse_packet(const Frame &frame, LinkType link_type) {
-    ParsedPacket p;
-    p.ts_us = frame.ts_us;
-    p.frame_len = frame.len;
+    ParsedPacket packet;
+    packet.ts_us = frame.ts_us;
+    packet.frame_len = frame.len;
 
-    Cursor c(frame.data, frame.len);
-    std::uint16_t ethertype = ethertype::Ipv4;
+    Cursor cursor(frame.data, frame.len);
+    std::uint16_t next_ethertype = ethertype::Ipv4;
 
     if (link_type == LinkType::Ethernet) {
-        p.eth = parse_ethernet(c);
-        if (!p.eth) {
-            p.truncated = true;
-            return p;
+        packet.eth = parse_ethernet(cursor);
+        if (!packet.eth) {
+            packet.truncated = true;
+            return packet;
         }
-        ethertype = p.eth->ethertype;
+        next_ethertype = packet.eth->ethertype;
     }
 
-    if (ethertype == ethertype::Ipv4) {
-        p.ipv4 = parse_ipv4(c);
-        if (!p.ipv4) {
-            p.truncated = true;
-            return p;
+    if (next_ethertype == ethertype::Ipv4) {
+        packet.ipv4 = parse_ipv4(cursor);
+        if (!packet.ipv4) {
+            packet.truncated = true;
+            return packet;
         }
 
-        if (p.ipv4->protocol == ip_proto::Tcp) {
-            p.tcp = parse_tcp(c, p.ipv4->src, p.ipv4->dst, p.ipv4->payload_len);
-            if (!p.tcp) {
-                p.truncated = true;
-                return p;
+        if (packet.ipv4->protocol == ip_proto::Tcp) {
+            packet.tcp = parse_tcp(cursor, packet.ipv4->src, packet.ipv4->dst, packet.ipv4->payload_len);
+            if (!packet.tcp) {
+                packet.truncated = true;
+                return packet;
             }
-        } else if (p.ipv4->protocol == ip_proto::Udp) {
-            p.udp = parse_udp(c, p.ipv4->src, p.ipv4->dst);
-            if (!p.udp) {
-                p.truncated = true;
-                return p;
+        } else if (packet.ipv4->protocol == ip_proto::Udp) {
+            packet.udp = parse_udp(cursor, packet.ipv4->src, packet.ipv4->dst);
+            if (!packet.udp) {
+                packet.truncated = true;
+                return packet;
             }
         }
     }
 
-    p.payload = c.ptr();
-    p.payload_len = c.remaining();
-    return p;
+    packet.payload = cursor.ptr();
+    packet.payload_len = cursor.remaining();
+    return packet;
 }
 
 }

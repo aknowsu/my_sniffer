@@ -35,13 +35,13 @@ constexpr OptSpec option_table[] = {
 };
 
 const OptSpec *find_option(std::string_view name) {
-    for (const OptSpec &o : option_table) {
+    for (const OptSpec &spec : option_table) {
         const bool as_short = name.size() == 2 && name[0] == '-' &&
-                              o.short_name != '\0' && name[1] == o.short_name;
+                              spec.short_name != '\0' && name[1] == spec.short_name;
         const bool as_long = name.size() > 2 && name.substr(0, 2) == "--" &&
-                             name.substr(2) == o.long_name;
+                             name.substr(2) == spec.long_name;
         if (as_short || as_long) {
-            return &o;
+            return &spec;
         }
     }
     return nullptr;

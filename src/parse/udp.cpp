@@ -32,30 +32,30 @@ bool udp_checksum_ok(std::uint32_t src_ip, std::uint32_t dst_ip,
 
 }
 
-std::optional<UdpHeader> parse_udp(Cursor &c, std::uint32_t src_ip, std::uint32_t dst_ip) {
-    const std::uint8_t *start = c.ptr();
+std::optional<UdpHeader> parse_udp(Cursor &cursor, std::uint32_t src_ip, std::uint32_t dst_ip) {
+    const std::uint8_t *start = cursor.ptr();
 
-    UdpHeader h{};
-    h.src_port = c.u16();
-    h.dst_port = c.u16();
-    h.length = c.u16();
-    h.checksum = c.u16();
+    UdpHeader header{};
+    header.src_port = cursor.u16();
+    header.dst_port = cursor.u16();
+    header.length = cursor.u16();
+    header.checksum = cursor.u16();
 
-    if (!c.ok() || h.length < fixed_header_len) {
+    if (!cursor.ok() || header.length < fixed_header_len) {
         return std::nullopt;
     }
 
-    h.header_len = fixed_header_len;
+    header.header_len = fixed_header_len;
 
-    const std::size_t available = fixed_header_len + c.remaining();
-    h.checksum_present = h.checksum != 0;
-    h.checksum_ok = h.checksum_present && h.length <= available &&
-                    udp_checksum_ok(src_ip, dst_ip, start, h.length);
+    const std::size_t available = fixed_header_len + cursor.remaining();
+    header.checksum_present = header.checksum != 0;
+    header.checksum_ok = header.checksum_present && header.length <= available &&
+                    udp_checksum_ok(src_ip, dst_ip, start, header.length);
 
-    const std::size_t declared = h.length - fixed_header_len;
-    h.payload_len = declared < c.remaining() ? declared : c.remaining();
+    const std::size_t declared = header.length - fixed_header_len;
+    header.payload_len = declared < cursor.remaining() ? declared : cursor.remaining();
 
-    return h;
+    return header;
 }
 
 }

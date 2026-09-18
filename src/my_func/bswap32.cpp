@@ -2,11 +2,11 @@
 
 namespace my {
 
-std::uint32_t bswap32(std::uint32_t v) {
-    return (v >> 24) |
-           ((v >> 8) & 0x0000FF00u) |
-           ((v << 8) & 0x00FF0000u) |
-           (v << 24);
+std::uint32_t bswap32(std::uint32_t value) {
+    return (value >> 24) |
+           ((value >> 8) & 0x0000FF00u) |
+           ((value << 8) & 0x00FF0000u) |
+           (value << 24);
 }
 
 }

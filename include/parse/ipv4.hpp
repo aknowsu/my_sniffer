@@ -33,6 +33,6 @@ struct Ipv4Header {
     std::size_t   payload_len;
 };
 
-std::optional<Ipv4Header> parse_ipv4(Cursor &c);
+std::optional<Ipv4Header> parse_ipv4(Cursor &cursor);
 
 }

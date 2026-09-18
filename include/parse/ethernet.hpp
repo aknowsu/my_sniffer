@@ -21,6 +21,6 @@ struct EthernetHeader {
     std::uint16_t vlan_id;
 };
 
-std::optional<EthernetHeader> parse_ethernet(Cursor &c);
+std::optional<EthernetHeader> parse_ethernet(Cursor &cursor);
 
 }

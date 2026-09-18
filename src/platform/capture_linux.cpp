@@ -91,8 +91,8 @@ void Capture::run(const FrameHandler &on_frame) {
             continue;
         }
 
-        const ssize_t n = ::recv(impl_->fd, buf, sizeof buf, 0);
-        if (n < 0) {
+        const ssize_t received = ::recv(impl_->fd, buf, sizeof buf, 0);
+        if (received < 0) {
             if (errno == EINTR) {
                 continue;
             }
@@ -101,7 +101,7 @@ void Capture::run(const FrameHandler &on_frame) {
 
         timeval now{};
         ::gettimeofday(&now, nullptr);
-        const Frame frame{buf, static_cast<std::size_t>(n),
+        const Frame frame{buf, static_cast<std::size_t>(received),
                           static_cast<std::int64_t>(now.tv_sec) * microseconds_per_second +
                               now.tv_usec};
         on_frame(frame);

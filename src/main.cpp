@@ -4,7 +4,6 @@
 #include "viewer.hpp"
 
 #include <signal.h>
-
 #include <atomic>
 #include <cstdint>
 #include <cstdio>
@@ -15,8 +14,8 @@ namespace {
 std::atomic<sniffer::Capture *> g_capture{nullptr};
 
 void on_signal(int) {
-    if (sniffer::Capture *c = g_capture.load()) {
-        c->stop();
+    if (sniffer::Capture *capture = g_capture.load()) {
+        capture->stop();
     }
 }
 

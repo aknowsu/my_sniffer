@@ -19,6 +19,6 @@ struct UdpHeader {
     std::size_t   payload_len;
 };
 
-std::optional<UdpHeader> parse_udp(Cursor &c, std::uint32_t src_ip, std::uint32_t dst_ip);
+std::optional<UdpHeader> parse_udp(Cursor &cursor, std::uint32_t src_ip, std::uint32_t dst_ip);
 
 }

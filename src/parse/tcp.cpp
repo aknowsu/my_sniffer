@@ -33,55 +33,55 @@ bool tcp_checksum_ok(std::uint32_t src_ip, std::uint32_t dst_ip,
 
 }
 
-std::optional<TcpHeader> parse_tcp(Cursor &c, std::uint32_t src_ip, std::uint32_t dst_ip,
+std::optional<TcpHeader> parse_tcp(Cursor &cursor, std::uint32_t src_ip, std::uint32_t dst_ip,
                                    std::size_t segment_len) {
-    const std::uint8_t *start = c.ptr();
-    if (segment_len > c.remaining()) {
-        segment_len = c.remaining();
+    const std::uint8_t *start = cursor.ptr();
+    if (segment_len > cursor.remaining()) {
+        segment_len = cursor.remaining();
     }
 
-    TcpHeader h{};
-    h.src_port = c.u16();
-    h.dst_port = c.u16();
-    h.seq = c.u32();
-    h.ack = c.u32();
+    TcpHeader header{};
+    header.src_port = cursor.u16();
+    header.dst_port = cursor.u16();
+    header.seq = cursor.u32();
+    header.ack = cursor.u32();
 
-    const std::uint8_t offset_reserved_ns = c.u8();
-    h.data_offset = offset_reserved_ns >> 4;
+    const std::uint8_t offset_reserved_ns = cursor.u8();
+    header.data_offset = offset_reserved_ns >> 4;
 
-    const std::uint8_t flag_bits = c.u8();
-    h.flags.ns = (offset_reserved_ns & 0x01) != 0;
-    h.flags.cwr = (flag_bits & 0x80) != 0;
-    h.flags.ece = (flag_bits & 0x40) != 0;
-    h.flags.urg = (flag_bits & 0x20) != 0;
-    h.flags.ack = (flag_bits & 0x10) != 0;
-    h.flags.psh = (flag_bits & 0x08) != 0;
-    h.flags.rst = (flag_bits & 0x04) != 0;
-    h.flags.syn = (flag_bits & 0x02) != 0;
-    h.flags.fin = (flag_bits & 0x01) != 0;
+    const std::uint8_t flag_bits = cursor.u8();
+    header.flags.ns = (offset_reserved_ns & 0x01) != 0;
+    header.flags.cwr = (flag_bits & 0x80) != 0;
+    header.flags.ece = (flag_bits & 0x40) != 0;
+    header.flags.urg = (flag_bits & 0x20) != 0;
+    header.flags.ack = (flag_bits & 0x10) != 0;
+    header.flags.psh = (flag_bits & 0x08) != 0;
+    header.flags.rst = (flag_bits & 0x04) != 0;
+    header.flags.syn = (flag_bits & 0x02) != 0;
+    header.flags.fin = (flag_bits & 0x01) != 0;
 
-    h.window = c.u16();
-    h.checksum = c.u16();
-    h.urgent_pointer = c.u16();
+    header.window = cursor.u16();
+    header.checksum = cursor.u16();
+    header.urgent_pointer = cursor.u16();
 
-    if (!c.ok() || h.data_offset < min_data_offset) {
+    if (!cursor.ok() || header.data_offset < min_data_offset) {
         return std::nullopt;
     }
 
-    h.header_len = static_cast<std::size_t>(h.data_offset) * bytes_per_word;
-    if (segment_len < h.header_len) {
+    header.header_len = static_cast<std::size_t>(header.data_offset) * bytes_per_word;
+    if (segment_len < header.header_len) {
         return std::nullopt;
     }
 
-    c.skip(h.header_len - min_data_offset * bytes_per_word);
-    if (!c.ok()) {
+    cursor.skip(header.header_len - min_data_offset * bytes_per_word);
+    if (!cursor.ok()) {
         return std::nullopt;
     }
 
-    h.checksum_ok = tcp_checksum_ok(src_ip, dst_ip, start, segment_len);
-    h.payload_len = segment_len - h.header_len;
+    header.checksum_ok = tcp_checksum_ok(src_ip, dst_ip, start, segment_len);
+    header.payload_len = segment_len - header.header_len;
 
-    return h;
+    return header;
 }
 
 }

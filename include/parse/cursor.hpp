@@ -18,40 +18,40 @@ public:
 
     std::uint8_t u8() noexcept {
         if (!want(1)) return 0;
-        const std::uint8_t v = my::read_u8(data_ + pos_);
+        const std::uint8_t value = my::read_u8(data_ + pos_);
         pos_ += 1;
-        return v;
+        return value;
     }
 
     std::uint16_t u16() noexcept {
         if (!want(2)) return 0;
-        const std::uint16_t v = my::read_u16be(data_ + pos_);
+        const std::uint16_t value = my::read_u16be(data_ + pos_);
         pos_ += 2;
-        return v;
+        return value;
     }
 
     std::uint32_t u32() noexcept {
         if (!want(4)) return 0;
-        const std::uint32_t v = my::read_u32be(data_ + pos_);
+        const std::uint32_t value = my::read_u32be(data_ + pos_);
         pos_ += 4;
-        return v;
+        return value;
     }
 
-    void copy(std::uint8_t *out, std::size_t n) noexcept {
-        if (!want(n)) return;
-        for (std::size_t i = 0; i < n; ++i) {
+    void copy(std::uint8_t *out, std::size_t count) noexcept {
+        if (!want(count)) return;
+        for (std::size_t i = 0; i < count; ++i) {
             out[i] = data_[pos_ + i];
         }
-        pos_ += n;
+        pos_ += count;
     }
 
-    void skip(std::size_t n) noexcept {
-        if (want(n)) pos_ += n;
+    void skip(std::size_t count) noexcept {
+        if (want(count)) pos_ += count;
     }
 
 private:
-    bool want(std::size_t n) noexcept {
-        if (bad_ || len_ - pos_ < n) {
+    bool want(std::size_t count) noexcept {
+        if (bad_ || len_ - pos_ < count) {
             bad_ = true;
             return false;
         }

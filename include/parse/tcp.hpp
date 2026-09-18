@@ -39,7 +39,7 @@ struct TcpHeader {
 // IPv4 layer (Ipv4Header::payload_len) — TCP has no length field of its own,
 // so this is the only accurate way to know where the segment ends and
 // trailing Ethernet padding begins. Needed for the checksum's pseudo-header.
-std::optional<TcpHeader> parse_tcp(Cursor &c, std::uint32_t src_ip, std::uint32_t dst_ip,
+std::optional<TcpHeader> parse_tcp(Cursor &cursor, std::uint32_t src_ip, std::uint32_t dst_ip,
                                    std::size_t segment_len);
 
 }

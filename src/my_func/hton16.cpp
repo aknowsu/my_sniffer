@@ -4,16 +4,16 @@
 
 namespace my {
 
-std::uint16_t hton16(std::uint16_t v) {
+std::uint16_t hton16(std::uint16_t value) {
     if constexpr (std::endian::native == std::endian::big) {
-        return v;
+        return value;
     } else {
-        return bswap16(v);
+        return bswap16(value);
     }
 }
 
-std::uint16_t ntoh16(std::uint16_t v) {
-    return hton16(v);
+std::uint16_t ntoh16(std::uint16_t value) {
+    return hton16(value);
 }
 
 }
