@@ -4,7 +4,7 @@ namespace my {
 
 std::optional<std::uint32_t> ipv4_from_text(std::string_view text) {
     std::uint32_t addr = 0;
-    std::size_t   pos = 0;
+    std::size_t pos = 0;
 
     for (int octet = 0; octet < 4; ++octet) {
         if (octet != 0) {
@@ -15,7 +15,7 @@ std::optional<std::uint32_t> ipv4_from_text(std::string_view text) {
         }
 
         const std::size_t start = pos;
-        std::uint32_t     value = 0;
+        std::uint32_t value = 0;
         while (pos < text.size() && text[pos] >= '0' && text[pos] <= '9') {
             value = value * 10 + static_cast<std::uint32_t>(text[pos] - '0');
             if (value > 255) {

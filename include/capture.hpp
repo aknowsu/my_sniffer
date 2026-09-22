@@ -14,8 +14,8 @@ enum class LinkType {
 
 struct Frame {
     const std::uint8_t *data;
-    std::size_t         len;
-    std::int64_t        ts_us;
+    std::size_t len;
+    std::int64_t ts_us;
 };
 
 using FrameHandler = std::function<void(const Frame &)>;
@@ -29,8 +29,8 @@ public:
     Capture &operator=(const Capture &) = delete;
 
     LinkType link_type() const noexcept;
-    void     run(const FrameHandler &on_frame);
-    void     stop() noexcept;
+    void run(const FrameHandler &on_frame);
+    void stop() noexcept;
 
 private:
     struct Impl;

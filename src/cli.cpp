@@ -16,22 +16,22 @@ namespace {
 enum class OptId { Interface, Filter, Write, Read, Verbose, Analyse, DecodedOnly, Help, Version };
 
 struct OptSpec {
-    OptId            id;
-    char             short_name;
+    OptId id;
+    char short_name;
     std::string_view long_name;
-    bool             takes_value;
+    bool takes_value;
 };
 
 constexpr OptSpec option_table[] = {
-    {OptId::Interface, 'i',  "interface", true },
-    {OptId::Filter,    'f',  "filter",    true },
-    {OptId::Write,     'w',  "write",     true },
-    {OptId::Read,      'r',  "read",      true },
-    {OptId::Verbose,   'v',  "verbose",   false},
-    {OptId::Analyse,   '\0', "analyse",   false},
-    {OptId::DecodedOnly, '\0', "decoded-only", false},
-    {OptId::Help,      'h',  "help",      false},
-    {OptId::Version,   'V',  "version",   false},
+    {OptId::Interface, 'i', "interface", true},
+    {OptId::Filter, 'f', "filter", true},
+    {OptId::Write, 'w', "write", true},
+    {OptId::Read, 'r', "read", true},
+    {OptId::Verbose, 'v', "verbose", false},
+    {OptId::Analyse, 'a', "analyse", false},
+    {OptId::DecodedOnly, 'd', "decoded-only", false},
+    {OptId::Help, 'h', "help", false},
+    {OptId::Version, 'V', "version", false},
 };
 
 const OptSpec *find_option(std::string_view name) {
@@ -119,7 +119,7 @@ ParseResult parse_args(int argc, char **argv) {
 
         std::string_view name = arg;
         std::string_view inline_value;
-        bool             has_inline = false;
+        bool has_inline = false;
         if (arg.rfind("--", 0) == 0) {
             if (const auto eq = arg.find('='); eq != std::string_view::npos) {
                 name = arg.substr(0, eq);
@@ -158,13 +158,13 @@ ParseResult parse_args(int argc, char **argv) {
             print_version();
             result.action = ParseResult::Action::Exit;
             return result;
-        case OptId::Verbose:   opt.verbose = true; break;
-        case OptId::Analyse:   opt.analyse = true; break;
+        case OptId::Verbose: opt.verbose = true; break;
+        case OptId::Analyse: opt.analyse = true; break;
         case OptId::DecodedOnly: opt.decoded_only = true; break;
         case OptId::Interface: opt.interface = std::string(value); positional_seen = true; break;
-        case OptId::Filter:    opt.filter = std::string(value); break;
-        case OptId::Write:     opt.write_path = std::string(value); break;
-        case OptId::Read:      opt.read_path = std::string(value); break;
+        case OptId::Filter: opt.filter = std::string(value); break;
+        case OptId::Write: opt.write_path = std::string(value); break;
+        case OptId::Read: opt.read_path = std::string(value); break;
         }
     }
 

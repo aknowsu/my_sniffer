@@ -15,8 +15,8 @@ inline constexpr std::uint16_t Vlan = 0x8100;
 }
 
 struct EthernetHeader {
-    std::uint8_t  dst[6];
-    std::uint8_t  src[6];
+    std::uint8_t dst[6];
+    std::uint8_t src[6];
     std::uint16_t ethertype;
     std::uint16_t vlan_id;
 };

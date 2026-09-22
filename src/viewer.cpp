@@ -12,19 +12,19 @@ namespace {
 const char *ethertype_name(std::uint16_t type) {
     switch (type) {
         case ethertype::Ipv4: return "IPv4";
-        case ethertype::Arp:  return "ARP";
+        case ethertype::Arp: return "ARP";
         case ethertype::Vlan: return "VLAN";
-        default:              return "unknown";
+        default: return "unknown";
     }
 }
 
 const char *ip_protocol_name(std::uint8_t proto) {
     switch (proto) {
-        case ip_proto::Icmp:   return "ICMP";
-        case ip_proto::Tcp:    return "TCP";
-        case ip_proto::Udp:    return "UDP";
+        case ip_proto::Icmp: return "ICMP";
+        case ip_proto::Tcp: return "TCP";
+        case ip_proto::Udp: return "UDP";
         case ip_proto::Icmpv6: return "ICMPv6";
-        default:               return "unknown";
+        default: return "unknown";
     }
 }
 

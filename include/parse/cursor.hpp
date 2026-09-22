@@ -12,8 +12,8 @@ public:
     Cursor(const std::uint8_t *data, std::size_t len) noexcept
         : data_(data), len_(len) {}
 
-    bool                ok() const noexcept { return !bad_; }
-    std::size_t         remaining() const noexcept { return bad_ ? 0 : len_ - pos_; }
+    bool ok() const noexcept { return !bad_; }
+    std::size_t remaining() const noexcept { return bad_ ? 0 : len_ - pos_; }
     const std::uint8_t *ptr() const noexcept { return data_ + pos_; }
 
     std::uint8_t u8() noexcept {
@@ -59,9 +59,9 @@ private:
     }
 
     const std::uint8_t *data_;
-    std::size_t         len_;
-    std::size_t         pos_ = 0;
-    bool                bad_ = false;
+    std::size_t len_;
+    std::size_t pos_ = 0;
+    bool bad_ = false;
 };
 
 }

@@ -39,7 +39,7 @@ int resolve_ifindex(int fd, const std::string &iface) {
 }
 
 struct Capture::Impl {
-    int               fd = -1;
+    int fd = -1;
     std::atomic<bool> running{false};
 };
 
@@ -82,7 +82,7 @@ LinkType Capture::link_type() const noexcept {
 
 void Capture::run(const FrameHandler &on_frame) {
     std::uint8_t buf[capture_buffer_size];
-    pollfd       pfd{};
+    pollfd pfd{};
     pfd.fd = impl_->fd;
     pfd.events = POLLIN;
 

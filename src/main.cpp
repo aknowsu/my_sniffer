@@ -35,7 +35,7 @@ int main(int argc, char **argv) {
     if (parsed.action == sniffer::ParseResult::Action::Exit) {
         return parsed.exit_code;
     }
-    const sniffer::Options    &opt = parsed.options;
+    const sniffer::Options &opt = parsed.options;
     const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
     std::uint64_t packets = 0;

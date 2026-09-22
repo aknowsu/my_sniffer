@@ -25,14 +25,14 @@ struct TcpHeader {
     std::uint16_t dst_port;
     std::uint32_t seq;
     std::uint32_t ack;
-    std::uint8_t  data_offset;
-    TcpFlags      flags;
+    std::uint8_t data_offset;
+    TcpFlags flags;
     std::uint16_t window;
     std::uint16_t checksum;
-    bool          checksum_ok;
+    bool checksum_ok;
     std::uint16_t urgent_pointer;
-    std::size_t   header_len;
-    std::size_t   payload_len;
+    std::size_t header_len;
+    std::size_t payload_len;
 };
 
 // `segment_len` is the TCP segment length (header + data) as declared by the
