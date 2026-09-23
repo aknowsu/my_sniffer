@@ -8,6 +8,18 @@
 namespace sniffer::filter {
 namespace {
 
+struct SingleCharToken {
+    char ch;
+    TokenKind kind;
+};
+
+constexpr SingleCharToken single_char_tokens[] = {
+    {'(', TokenKind::LParen},
+    {')', TokenKind::RParen},
+    {'<', TokenKind::Lt},
+    {'>', TokenKind::Gt},
+};
+
 bool is_ident_start(char ch) {
     return std::isalpha(static_cast<unsigned char>(ch)) || ch == '_';
 }
@@ -67,10 +79,17 @@ std::vector<Token> tokenize(std::string_view expr) {
             ++pos;
             continue;
         }
-        if (ch == '(') { tokens.push_back({TokenKind::LParen, "(", 0, 0, 0, pos}); ++pos; continue; }
-        if (ch == ')') { tokens.push_back({TokenKind::RParen, ")", 0, 0, 0, pos}); ++pos; continue; }
-        if (ch == '<') { tokens.push_back({TokenKind::Lt, "<", 0, 0, 0, pos}); ++pos; continue; }
-        if (ch == '>') { tokens.push_back({TokenKind::Gt, ">", 0, 0, 0, pos}); ++pos; continue; }
+        bool matched_single_char = false;
+        for (const SingleCharToken &entry : single_char_tokens) {
+            if (ch == entry.ch) {
+                tokens.push_back({entry.kind, std::string(1, ch), 0, 0, 0, pos});
+                ++pos;
+                matched_single_char = true;
+                break;
+            }
+        }
+        if (matched_single_char) continue;
+
         if (ch == '=') {
             const std::size_t start = pos;
             ++pos;
