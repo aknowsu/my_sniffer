@@ -1,5 +1,6 @@
 #include "capture.hpp"
 #include "cli.hpp"
+#include "filter/filter.hpp"
 #include "parse/packet.hpp"
 #include "viewer.hpp"
 
@@ -8,6 +9,8 @@
 #include <cstdint>
 #include <cstdio>
 #include <exception>
+#include <optional>
+#include <string>
 
 namespace {
 
@@ -38,6 +41,16 @@ int main(int argc, char **argv) {
     const sniffer::Options &opt = parsed.options;
     const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
+    std::optional<sniffer::filter::Filter> filter;
+    if (opt.filter) {
+        std::string error;
+        filter = sniffer::filter::parse_filter(*opt.filter, error);
+        if (!filter) {
+            std::fprintf(stderr, "my_sniffer: invalid filter: %s\n", error.c_str());
+            return 2;
+        }
+    }
+
     std::uint64_t packets = 0;
     std::uint64_t bytes = 0;
 
@@ -48,9 +61,12 @@ int main(int argc, char **argv) {
 
         const sniffer::LinkType link = capture.link_type();
         capture.run([&](const sniffer::Frame &frame) {
+            const sniffer::ParsedPacket pkt = sniffer::parse_packet(frame, link);
+            if (filter && !filter->matches(frame, pkt)) {
+                return;
+            }
             ++packets;
             bytes += frame.len;
-            const sniffer::ParsedPacket pkt = sniffer::parse_packet(frame, link);
             sniffer::print_packet(stdout, frame, pkt, view);
         });
 
