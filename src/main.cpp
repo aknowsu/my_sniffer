@@ -41,6 +41,11 @@ int main(int argc, char **argv) {
     const sniffer::Options &opt = parsed.options;
     const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
+    if (opt.write_path || opt.read_path) {
+        std::fprintf(stderr, "my_sniffer: -w/--write and -r/--read are not implemented yet\n");
+        return 2;
+    }
+
     std::optional<sniffer::filter::Filter> filter;
     if (opt.filter) {
         std::string error;

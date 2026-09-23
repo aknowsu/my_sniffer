@@ -3,33 +3,28 @@
 A cross-platform network packet sniffer built from scratch: raw capture,
 protocol parsing, filtering and behavioural analysis — no networking library.
 
-> **Status: early development.** The build system and architecture are in
-> place; capture and parsing are not implemented yet. See the
-> [roadmap](#roadmap).
-
 ## Why "from scratch"
 
 Every layer between the wire and an application is handled by this project
 itself — raw socket capture, Ethernet/IP/transport parsing, filtering and
-analysis. No `libpcap`, no packet-parsing or protocol-decoding library.
+analysis. No `libpcap`, no packet-parsing or protocol-decoding library, no
+`<arpa/inet.h>`-style address helpers. The only system headers used are the
+minimal OS/kernel plumbing required to open a raw socket at all (`socket`,
+`bind`, `poll`, `ioctl`) — never anything that parses or resolves for you.
 Libraries unrelated to networking (CLI parsing, logging, tests) may be used.
 
-## Features
+## What it does
 
-| Capability | Status |
-| --- | --- |
-| Raw capture — Linux (`PF_PACKET` / `SOCK_RAW`) | planned |
-| Raw capture — Windows (raw socket + `SIO_RCVALL`) | planned |
-| Parsing: Ethernet, IPv4, TCP, UDP | planned |
-| Packet viewer (summary + hexdump) | planned |
-| User-defined filter / search language | planned |
-| Behavioural analysis (spikes, beaconing, anomalies) | planned |
-| Capture logging & storage | planned |
+Raw capture off the wire, decoding of Ethernet (with VLAN tags), IPv4, TCP
+and UDP with checksum verification, a packet viewer (summary line, per-field
+detail, hexdump), and a filter expression language (`-f`) to only display
+matching packets — see [below](#filter-language).
 
 ## Supported platforms
 
-- **Linux** — primary.
-- **Windows** — second platform.
+- **Linux** — capture backend implemented (`AF_PACKET` / `SOCK_RAW`).
+- **Windows** — capture backend not implemented; everything else (parsing,
+  filtering, display) is platform-independent.
 
 ## Requirements
 
@@ -82,29 +77,52 @@ sudo setcap cap_net_raw,cap_net_admin+ep ./build/my_sniffer
 sudo ./build/my_sniffer <interface>
 ```
 
-**Windows:** run from an **Administrator** terminal.
-
-```pwsh
-.\build\Release\my_sniffer.exe <interface-ip>
-```
+**Windows:** not available yet — the capture backend is a stub.
 
 ### Usage
 
 ```
 my_sniffer [options] [interface]
 
-  -i, --interface <name>   interface to capture on (default: first up)
-  -f, --filter <expr>      filter expression (see docs/filter.md)
-  -w, --write <file>       save captured packets to <file>
-  -r, --read <file>        replay / analyse a saved capture
-  -v, --verbose            per-packet hexdump
-      --analyse            run the behavioural analysis engine
+  -i, --interface <name>   interface to capture on (default: none bound,
+                            all interfaces). May also be given positionally.
+  -f, --filter <expr>      only show packets matching <expr> (see below)
+  -w, --write <file>       save captured packets to <file> (not implemented)
+  -r, --read <file>        replay a saved capture (not implemented)
+  -v, --verbose            print every decoded field + a hexdump per packet
+      --decoded-only       hide packets whose protocol wasn't decoded
+      --analyse            run the behavioural analysis engine (not implemented)
   -h, --help               show help and exit
   -V, --version            show version and exit
 ```
 
-The command line is parsed today; capture and parsing are still stubbed
-(`my_sniffer` prints the resolved options and exits).
+## Filter language
+
+`-f <expr>` only prints packets matching `<expr>`. Matching is done after
+parsing, against the already-decoded fields (same ones `-v` shows) — an
+invalid expression is rejected at startup with a message pointing at the
+offending part, before any capture starts.
+
+```
+my_sniffer -i eth0 -f "tcp and port 443"
+my_sniffer -i eth0 -f "udp or icmp"
+my_sniffer -i eth0 -f "not (port 22 or port 3389)"
+my_sniffer -i eth0 -f "net 192.168.0.0/16 and not port 22"
+my_sniffer -i eth0 -f "len > 1400"
+my_sniffer -i eth0 -f "tcp.flags has syn"
+```
+
+| Predicate | Matches |
+| --- | --- |
+| `tcp`, `udp`, `icmp`, `arp`, `ip` | the packet's protocol |
+| `port N`, `src port N`, `dst port N` | a TCP/UDP port |
+| `host A`, `src host A`, `dst host A` | an IPv4 address |
+| `net A/M`, `src net A/M`, `dst net A/M` | an IPv4 CIDR range |
+| `len (> \| < \| ==) N` | the captured frame length |
+| `tcp.flags has <flag>` | a TCP flag (`syn`, `ack`, `fin`, `rst`, `psh`, `urg`, `ece`, `cwr`, `ns`) |
+
+Combine predicates with `and`, `or`, `not` and parentheses; `not` binds
+tighter than `and`, which binds tighter than `or`.
 
 ## Project layout
 
@@ -112,28 +130,20 @@ The command line is parsed today; capture and parsing are still stubbed
 my_sniffer/
 ├── CMakeLists.txt          build + install, per-OS capture backend
 ├── include/
-│   ├── capture.hpp         common capture interface
-│   └── cli.hpp             command-line options
+│   ├── capture.hpp         common capture interface (PImpl)
+│   ├── cli.hpp             command-line options
+│   ├── viewer.hpp          packet display
+│   ├── my_func/            byte-order, buffer reads, addresses, checksums, hexdump
+│   ├── parse/              cursor + one header per protocol layer
+│   └── filter/             filter tokenizer, AST, parser/evaluator
 ├── src/
-│   ├── main.cpp            entry point
+│   ├── main.cpp            entry point — wires capture, filter, parsing, display
 │   ├── cli.cpp             option parsing / --help
+│   ├── viewer.cpp           packet display
+│   ├── my_func/            one file per helper function
+│   ├── parse/               one file per protocol layer + the orchestrator
+│   ├── filter/               tokenizer + recursive-descent parser/evaluator
 │   └── platform/
 │       ├── capture_linux.cpp     AF_PACKET / SOCK_RAW backend
-│       └── capture_windows.cpp   raw socket + SIO_RCVALL backend
+│       └── capture_windows.cpp   stub, not implemented
 ```
-
-## Roadmap
-
-Work is tracked as GitHub milestones, following the subject's steps:
-
-| Milestone | Scope |
-| --- | --- |
-| M0 — Project setup | build system, repo hygiene |
-| M1 — Step 0: function helpers | binary parsing / conversion helpers |
-| M2 — Step 1: capture & viewer | raw capture + Ethernet/IPv4/TCP/UDP + display |
-| M3 — Step 2: filter & search | user-defined filtering, live and post-capture |
-| M4 — Step 3: analysis engine | anomaly & beaconing detection, logging |
-| M5 — Step 4: packaging | install scripts, versioning, documentation |
-| M6 — Bonus | extra protocols, app-layer, sniffer detection, TUI |
-
-Detailed tasks: <https://github.com/aknowsu/my_sniffer/issues>
