@@ -71,27 +71,29 @@ Capturing raw traffic needs elevated privileges.
 ```sh
 # Option A — grant the capability once (recommended)
 sudo setcap cap_net_raw,cap_net_admin+ep ./build/my_sniffer
-./build/my_sniffer <interface>
+./build/my_sniffer
 
 # Option B — run as root
-sudo ./build/my_sniffer <interface>
+sudo ./build/my_sniffer
 ```
+
+Capture always listens on every interface — there is no way to target a
+single one.
 
 **Windows:** not available yet — the capture backend is a stub.
 
 ### Usage
 
 ```
-my_sniffer [options] [interface]
+my_sniffer [options]
 
-  -i, --interface <name>   interface to capture on (default: none bound,
-                            all interfaces). May also be given positionally.
   -f, --filter <expr>      only show packets matching <expr> (see below)
   -w, --write <file>       save captured packets to <file> (not implemented)
   -r, --read <file>        replay a saved capture (not implemented)
   -v, --verbose            print every decoded field + a hexdump per packet
       --decoded-only       hide packets whose protocol wasn't decoded
-      --analyse            run the behavioural analysis engine (not implemented)
+      --analyse            run the behavioural analysis engine over a saved
+                            capture, i.e. together with -r (not implemented)
   -h, --help               show help and exit
   -V, --version            show version and exit
 ```
@@ -104,12 +106,12 @@ invalid expression is rejected at startup with a message pointing at the
 offending part, before any capture starts.
 
 ```
-my_sniffer -i eth0 -f "tcp and port 443"
-my_sniffer -i eth0 -f "udp or icmp"
-my_sniffer -i eth0 -f "not (port 22 or port 3389)"
-my_sniffer -i eth0 -f "net 192.168.0.0/16 and not port 22"
-my_sniffer -i eth0 -f "len > 1400"
-my_sniffer -i eth0 -f "tcp.flags has syn"
+my_sniffer -f "tcp and port 443"
+my_sniffer -f "udp or icmp"
+my_sniffer -f "not (port 22 or port 3389)"
+my_sniffer -f "net 192.168.0.0/16 and not port 22"
+my_sniffer -f "len > 1400"
+my_sniffer -f "tcp.flags has syn"
 ```
 
 | Predicate | Matches |

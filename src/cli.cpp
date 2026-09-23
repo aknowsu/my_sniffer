@@ -13,7 +13,7 @@
 namespace sniffer {
 namespace {
 
-enum class OptId { Interface, Filter, Write, Read, Verbose, Analyse, DecodedOnly, Help, Version };
+enum class OptId { Filter, Write, Read, Verbose, Analyse, DecodedOnly, Help, Version };
 
 struct OptSpec {
     OptId id;
@@ -23,7 +23,6 @@ struct OptSpec {
 };
 
 constexpr OptSpec option_table[] = {
-    {OptId::Interface, 'i', "interface", true},
     {OptId::Filter, 'f', "filter", true},
     {OptId::Write, 'w', "write", true},
     {OptId::Read, 'r', "read", true},
@@ -52,22 +51,20 @@ const OptSpec *find_option(std::string_view name) {
 void print_usage(const char *argv0) {
     const char *prog = (argv0 && *argv0) ? argv0 : SNIFFER_NAME;
     std::printf(
-        "Usage: %s [options] [interface]\n"
+        "Usage: %s [options]\n"
         "\n"
         "A from-scratch network packet sniffer: raw capture, protocol parsing,\n"
         "filtering and behavioural analysis.\n"
         "\n"
         "Options:\n"
-        "  -i, --interface <name>   Interface to capture on. Defaults to no\n"
-        "                           interface bound, i.e. every interface.\n"
-        "                           May also be given as a positional argument.\n"
         "  -f, --filter <expr>      Only show packets matching <expr>.\n"
         "  -w, --write <file>       Save captured packets to <file>. Not\n"
         "                           implemented yet.\n"
         "  -r, --read <file>        Replay a saved capture instead of\n"
         "                           capturing live. Not implemented yet.\n"
         "  -v, --verbose            Print a hexdump for every packet.\n"
-        "      --analyse            Run the behavioural analysis engine.\n"
+        "      --analyse            Run the behavioural analysis engine over a\n"
+        "                           saved capture (-r). Not implemented yet.\n"
         "      --decoded-only       Only show packets whose protocol is\n"
         "                           decoded (hide the 'unknown' ones).\n"
         "  -h, --help               Show this help and exit.\n"
@@ -97,7 +94,6 @@ ParseResult parse_args(int argc, char **argv) {
     };
 
     Options &opt = result.options;
-    bool positional_seen = false;
     bool options_ended = false;
 
     for (int i = 1; i < argc; ++i) {
@@ -109,13 +105,8 @@ ParseResult parse_args(int argc, char **argv) {
         }
 
         if (options_ended || arg.size() < 2 || arg[0] != '-') {
-            if (positional_seen) {
-                fail("unexpected extra argument", arg);
-                return result;
-            }
-            opt.interface = std::string(arg);
-            positional_seen = true;
-            continue;
+            fail("unexpected extra argument", arg);
+            return result;
         }
 
         std::string_view name = arg;
@@ -162,7 +153,6 @@ ParseResult parse_args(int argc, char **argv) {
         case OptId::Verbose: opt.verbose = true; break;
         case OptId::Analyse: opt.analyse = true; break;
         case OptId::DecodedOnly: opt.decoded_only = true; break;
-        case OptId::Interface: opt.interface = std::string(value); positional_seen = true; break;
         case OptId::Filter: opt.filter = std::string(value); break;
         case OptId::Write: opt.write_path = std::string(value); break;
         case OptId::Read: opt.read_path = std::string(value); break;

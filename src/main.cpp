@@ -41,8 +41,9 @@ int main(int argc, char **argv) {
     const sniffer::Options &opt = parsed.options;
     const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
-    if (opt.write_path || opt.read_path) {
-        std::fprintf(stderr, "my_sniffer: -w/--write and -r/--read are not implemented yet\n");
+    if (opt.write_path || opt.read_path || opt.analyse) {
+        std::fprintf(stderr,
+                     "my_sniffer: -w/--write, -r/--read and --analyse are not implemented yet\n");
         return 2;
     }
 
@@ -60,7 +61,7 @@ int main(int argc, char **argv) {
     std::uint64_t bytes = 0;
 
     try {
-        sniffer::Capture capture(opt.interface);
+        sniffer::Capture capture("");
         g_capture.store(&capture);
         install_signal_handlers();
 

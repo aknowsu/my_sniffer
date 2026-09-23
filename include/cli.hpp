@@ -6,7 +6,6 @@
 namespace sniffer {
 
 struct Options {
-    std::string interface;
     std::optional<std::string> filter;
     std::optional<std::string> write_path;
     std::optional<std::string> read_path;
