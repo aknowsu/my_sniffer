@@ -88,7 +88,7 @@ single one.
 my_sniffer [options]
 
   -f, --filter <expr>      only show packets matching <expr> (see below)
-  -w, --write <file>       save captured packets to <file> (not implemented)
+  -w, --write <file>       log the displayed packets to <file> (see below)
   -r, --read <file>        replay a saved capture (not implemented)
   -v, --verbose            print every decoded field + a hexdump per packet
       --decoded-only       hide packets whose protocol wasn't decoded
@@ -97,6 +97,20 @@ my_sniffer [options]
   -h, --help               show help and exit
   -V, --version            show version and exit
 ```
+
+## Logging
+
+`-w <file>` writes every displayed packet to `<file>` (created or truncated),
+in the same layout as the screen — one summary line per packet, or the full
+per-field detail and hexdump with `-v` — each prefixed with its UTC time to
+the millisecond:
+
+```
+2025-09-23 17:00:00.123  192.168.1.10:54321 > 93.184.216.34:443  TCP [SYN]  ttl=64  54 bytes
+```
+
+`-f` and `--decoded-only` apply to the log too: only packets that pass are
+written. The log is flushed after each packet.
 
 ## Filter language
 
@@ -138,14 +152,14 @@ my_sniffer/
 │   ├── my_func/            byte-order, buffer reads, addresses, checksums, hexdump
 │   ├── parse/              cursor + one header per protocol layer
 │   └── filter/             filter tokenizer, AST, parser/evaluator
-├── src/
-│   ├── main.cpp            entry point — wires capture, filter, parsing, display
-│   ├── cli.cpp             option parsing / --help
-│   ├── viewer.cpp           packet display
-│   ├── my_func/            one file per helper function
-│   ├── parse/               one file per protocol layer + the orchestrator
-│   ├── filter/               tokenizer + recursive-descent parser/evaluator
-│   └── platform/
-│       ├── capture_linux.cpp     AF_PACKET / SOCK_RAW backend
-│       └── capture_windows.cpp   stub, not implemented
+└── src/
+    ├── main.cpp            entry point — wires capture, filter, parsing, display
+    ├── cli.cpp             option parsing / --help
+    ├── viewer.cpp           packet display
+    ├── my_func/            one file per helper function
+    ├── parse/               one file per protocol layer + the orchestrator
+    ├── filter/               tokenizer + recursive-descent parser/evaluator
+    └── platform/
+        ├── capture_linux.cpp     AF_PACKET / SOCK_RAW backend
+        └── capture_windows.cpp   stub, not implemented
 ```

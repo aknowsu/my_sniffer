@@ -10,6 +10,7 @@ namespace sniffer {
 struct ViewOptions {
     bool verbose = false;
     bool decoded_only = false;
+    bool show_time = false;
 };
 
 void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,

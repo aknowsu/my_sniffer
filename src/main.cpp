@@ -6,15 +6,22 @@
 
 #include <signal.h>
 #include <atomic>
+#include <cerrno>
 #include <cstdint>
 #include <cstdio>
+#include <cstring>
 #include <exception>
+#include <memory>
 #include <optional>
 #include <string>
 
 namespace {
 
 std::atomic<sniffer::Capture *> g_capture{nullptr};
+
+struct FileCloser {
+    void operator()(std::FILE *file) const { std::fclose(file); }
+};
 
 void on_signal(int) {
     if (sniffer::Capture *capture = g_capture.load()) {
@@ -41,9 +48,8 @@ int main(int argc, char **argv) {
     const sniffer::Options &opt = parsed.options;
     const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
-    if (opt.write_path || opt.read_path || opt.analyse) {
-        std::fprintf(stderr,
-                     "my_sniffer: -w/--write, -r/--read and --analyse are not implemented yet\n");
+    if (opt.read_path || opt.analyse) {
+        std::fprintf(stderr, "my_sniffer: -r/--read and --analyse are not implemented yet\n");
         return 2;
     }
 
@@ -56,6 +62,18 @@ int main(int argc, char **argv) {
             return 2;
         }
     }
+
+    std::unique_ptr<std::FILE, FileCloser> log;
+    if (opt.write_path) {
+        log.reset(std::fopen(opt.write_path->c_str(), "w"));
+        if (!log) {
+            std::fprintf(stderr, "my_sniffer: cannot open %s: %s\n", opt.write_path->c_str(),
+                         std::strerror(errno));
+            return 1;
+        }
+    }
+    sniffer::ViewOptions log_view = view;
+    log_view.show_time = true;
 
     std::uint64_t packets = 0;
     std::uint64_t bytes = 0;
@@ -74,6 +92,10 @@ int main(int argc, char **argv) {
             ++packets;
             bytes += frame.len;
             sniffer::print_packet(stdout, frame, pkt, view);
+            if (log) {
+                sniffer::print_packet(log.get(), frame, pkt, log_view);
+                std::fflush(log.get());
+            }
         });
 
         g_capture.store(nullptr);

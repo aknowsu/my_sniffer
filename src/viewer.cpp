@@ -4,10 +4,15 @@
 #include "my_func/hexdump.hpp"
 
 #include <cstring>
+#include <ctime>
 #include <string>
 
 namespace sniffer {
 namespace {
+
+constexpr std::int64_t microseconds_per_second = 1'000'000;
+constexpr std::int64_t microseconds_per_millisecond = 1'000;
+constexpr int tm_year_base = 1900;
 
 const char *ethertype_name(std::uint16_t type) {
     switch (type) {
@@ -50,6 +55,20 @@ std::string tcp_flags_text(const TcpFlags &flags) {
 std::string hex_u16(std::uint16_t value) {
     char buf[8];
     std::snprintf(buf, sizeof buf, "0x%04x", value);
+    return buf;
+}
+
+std::string time_text(std::int64_t ts_us) {
+    const std::time_t seconds = static_cast<std::time_t>(ts_us / microseconds_per_second);
+    const int millis = static_cast<int>(ts_us % microseconds_per_second / microseconds_per_millisecond);
+    const std::tm *utc = std::gmtime(&seconds);
+    if (utc == nullptr) {
+        return "?  ";
+    }
+    char buf[80];
+    std::snprintf(buf, sizeof buf, "%04d-%02d-%02d %02d:%02d:%02d.%03d  ",
+                  utc->tm_year + tm_year_base, utc->tm_mon + 1, utc->tm_mday,
+                  utc->tm_hour, utc->tm_min, utc->tm_sec, millis);
     return buf;
 }
 
@@ -137,6 +156,10 @@ void print_packet(std::FILE *out, const Frame &frame, const ParsedPacket &pkt,
                   const ViewOptions &opts) {
     if (opts.decoded_only && !is_decoded(pkt)) {
         return;
+    }
+
+    if (opts.show_time) {
+        std::fputs(time_text(frame.ts_us).c_str(), out);
     }
 
     const char *suffix = pkt.truncated ? "  [truncated]" : "";
