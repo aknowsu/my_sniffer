@@ -38,6 +38,17 @@ constexpr FlagEntry flag_table[] = {
     {"ns", &TcpFlags::ns},
 };
 
+struct CompareEntry {
+    TokenKind token;
+    Compare cmp;
+};
+
+constexpr CompareEntry compare_table[] = {
+    {TokenKind::Gt, Compare::Gt},
+    {TokenKind::Lt, Compare::Lt},
+    {TokenKind::Eq, Compare::Eq},
+};
+
 class Parser {
 public:
     explicit Parser(std::vector<Token> tokens) : tokens_(std::move(tokens)) {}
@@ -49,6 +60,12 @@ public:
     }
 
 private:
+    struct Keyword {
+        std::string_view name;
+        NodePtr (Parser::*parse)(Direction);
+        bool directional;
+    };
+
     const Token &peek() const { return tokens_[pos_]; }
 
     Token advance() { return tokens_[pos_++]; }
@@ -81,36 +98,34 @@ private:
         return node;
     }
 
-    NodePtr parse_or() {
-        NodePtr node = parse_and();
-        while (at_identifier("or")) {
+    static std::uint32_t prefix_to_mask(std::uint8_t prefix_len) {
+        if (prefix_len == 0) return 0;
+        if (prefix_len >= 32) return 0xFFFFFFFFu;
+        return ~std::uint32_t{0} << (32 - prefix_len);
+    }
+
+    NodePtr parse_chain(std::string_view word, NodeKind kind, NodePtr (Parser::*operand)()) {
+        NodePtr node = (this->*operand)();
+        while (at_identifier(word)) {
             advance();
-            NodePtr result = leaf(NodeKind::Or);
-            result->left = std::move(node);
-            result->right = parse_and();
-            node = std::move(result);
+            NodePtr parent = leaf(kind);
+            parent->left = std::move(node);
+            parent->right = (this->*operand)();
+            node = std::move(parent);
         }
         return node;
     }
 
-    NodePtr parse_and() {
-        NodePtr node = parse_not();
-        while (at_identifier("and")) {
-            advance();
-            NodePtr result = leaf(NodeKind::And);
-            result->left = std::move(node);
-            result->right = parse_not();
-            node = std::move(result);
-        }
-        return node;
-    }
+    NodePtr parse_or() { return parse_chain("or", NodeKind::Or, &Parser::parse_and); }
+
+    NodePtr parse_and() { return parse_chain("and", NodeKind::And, &Parser::parse_not); }
 
     NodePtr parse_not() {
         if (at_identifier("not")) {
             advance();
-            NodePtr result = leaf(NodeKind::Not);
-            result->left = parse_not();
-            return result;
+            NodePtr node = leaf(NodeKind::Not);
+            node->left = parse_not();
+            return node;
         }
         return parse_atom();
     }
@@ -125,128 +140,109 @@ private:
         return parse_predicate();
     }
 
-    Compare parse_compare() {
-        if (peek().kind == TokenKind::Gt) { advance(); return Compare::Gt; }
-        if (peek().kind == TokenKind::Lt) { advance(); return Compare::Lt; }
-        if (peek().kind == TokenKind::Eq) { advance(); return Compare::Eq; }
-        fail("expected '>', '<' or '=='");
-    }
-
-    bool TcpFlags::*parse_flag_name() {
-        const Token token = expect(TokenKind::Identifier, "a TCP flag name");
-        for (const FlagEntry &entry : flag_table) {
-            if (token.text == entry.name) {
-                return entry.member;
-            }
-        }
-        throw std::runtime_error("unknown TCP flag '" + token.text + "' at position " +
-                                 std::to_string(token.position));
-    }
-
-    static std::uint32_t prefix_to_mask(std::uint8_t prefix_len) {
-        if (prefix_len == 0) return 0;
-        if (prefix_len >= 32) return 0xFFFFFFFFu;
-        return ~std::uint32_t{0} << (32 - prefix_len);
-    }
-
     NodePtr parse_predicate() {
         if (peek().kind != TokenKind::Identifier) {
             fail("expected a predicate");
         }
         const Token word = advance();
 
-        if (word.text == "tcp.flags") {
-            expect_word("has");
-            NodePtr node = leaf(NodeKind::TcpFlag);
-            node->flag_member = parse_flag_name();
-            return node;
-        }
         for (const SimplePredicate &entry : simple_predicates) {
             if (word.text == entry.name) {
                 return leaf(entry.kind);
             }
         }
 
+        Direction direction = Direction::Any;
+        std::string keyword = word.text;
         if (word.text == "src" || word.text == "dst") {
-            const bool is_src = word.text == "src";
-            if (at_identifier("port")) {
-                advance();
-                const Token number = expect(TokenKind::Number, "a port number");
-                NodePtr node = leaf(is_src ? NodeKind::SrcPort : NodeKind::DstPort);
-                node->port = static_cast<std::uint32_t>(number.number);
-                return node;
-            }
-            if (at_identifier("host")) {
-                advance();
-                const Token addr = expect(TokenKind::Ipv4, "an IPv4 address");
-                NodePtr node = leaf(is_src ? NodeKind::SrcHost : NodeKind::DstHost);
-                node->addr = addr.addr;
-                return node;
-            }
-            if (at_identifier("net")) {
-                advance();
-                const Token cidr = expect(TokenKind::Cidr, "a CIDR network");
-                NodePtr node = leaf(is_src ? NodeKind::SrcNet : NodeKind::DstNet);
-                node->addr = cidr.addr;
-                node->mask = prefix_to_mask(cidr.prefix_len);
-                return node;
-            }
-            fail("expected 'port', 'host' or 'net' after '" + word.text + "'");
+            direction = word.text == "src" ? Direction::Src : Direction::Dst;
+            keyword = expect(TokenKind::Identifier, "'port', 'host' or 'net'").text;
         }
 
-        if (word.text == "port") {
-            const Token number = expect(TokenKind::Number, "a port number");
-            NodePtr node = leaf(NodeKind::Port);
-            node->port = static_cast<std::uint32_t>(number.number);
-            return node;
+        static constexpr Keyword keywords[] = {
+            {"port", &Parser::parse_port, true},
+            {"host", &Parser::parse_host, true},
+            {"net", &Parser::parse_net, true},
+            {"len", &Parser::parse_len, false},
+            {"tcp.flags", &Parser::parse_tcp_flags, false},
+        };
+        for (const Keyword &entry : keywords) {
+            if (keyword == entry.name) {
+                if (direction != Direction::Any && !entry.directional) {
+                    throw std::runtime_error("'" + word.text + "' cannot be used before '" + keyword +
+                                             "' at position " + std::to_string(word.position));
+                }
+                return (this->*entry.parse)(direction);
+            }
         }
-        if (word.text == "host") {
-            const Token addr = expect(TokenKind::Ipv4, "an IPv4 address");
-            NodePtr node = leaf(NodeKind::Host);
-            node->addr = addr.addr;
-            return node;
-        }
-        if (word.text == "net") {
-            const Token cidr = expect(TokenKind::Cidr, "a CIDR network");
-            NodePtr node = leaf(NodeKind::Net);
-            node->addr = cidr.addr;
-            node->mask = prefix_to_mask(cidr.prefix_len);
-            return node;
-        }
-        if (word.text == "len") {
-            NodePtr node = leaf(NodeKind::Len);
-            node->cmp = parse_compare();
-            const Token number = expect(TokenKind::Number, "a length");
-            node->len_value = static_cast<std::uint32_t>(number.number);
-            return node;
-        }
-
-        throw std::runtime_error("unknown predicate '" + word.text + "' at position " +
+        throw std::runtime_error("unknown predicate '" + keyword + "' at position " +
                                  std::to_string(word.position));
+    }
+
+    NodePtr parse_port(Direction direction) {
+        const Token number = expect(TokenKind::Number, "a port number");
+        NodePtr node = leaf(NodeKind::Port);
+        node->direction = direction;
+        node->port = static_cast<std::uint32_t>(number.number);
+        return node;
+    }
+
+    NodePtr parse_host(Direction direction) {
+        const Token addr = expect(TokenKind::Ipv4, "an IPv4 address");
+        NodePtr node = leaf(NodeKind::Host);
+        node->direction = direction;
+        node->addr = addr.addr;
+        return node;
+    }
+
+    NodePtr parse_net(Direction direction) {
+        const Token cidr = expect(TokenKind::Cidr, "a CIDR network");
+        NodePtr node = leaf(NodeKind::Net);
+        node->direction = direction;
+        node->addr = cidr.addr;
+        node->mask = prefix_to_mask(cidr.prefix_len);
+        return node;
+    }
+
+    NodePtr parse_len(Direction) {
+        NodePtr node = leaf(NodeKind::Len);
+        node->cmp = parse_compare();
+        const Token number = expect(TokenKind::Number, "a length");
+        node->len_value = static_cast<std::uint32_t>(number.number);
+        return node;
+    }
+
+    NodePtr parse_tcp_flags(Direction) {
+        expect_word("has");
+        const Token name = expect(TokenKind::Identifier, "a TCP flag name");
+        for (const FlagEntry &entry : flag_table) {
+            if (name.text == entry.name) {
+                NodePtr node = leaf(NodeKind::TcpFlag);
+                node->flag_member = entry.member;
+                return node;
+            }
+        }
+        throw std::runtime_error("unknown TCP flag '" + name.text + "' at position " +
+                                 std::to_string(name.position));
+    }
+
+    Compare parse_compare() {
+        for (const CompareEntry &entry : compare_table) {
+            if (peek().kind == entry.token) {
+                advance();
+                return entry.cmp;
+            }
+        }
+        fail("expected '>', '<' or '=='");
     }
 
     std::vector<Token> tokens_;
     std::size_t pos_ = 0;
 };
 
-bool port_matches(const ParsedPacket &packet, std::uint32_t port, bool check_src, bool check_dst) {
-    if (packet.tcp) {
-        if (check_src && packet.tcp->src_port == port) return true;
-        if (check_dst && packet.tcp->dst_port == port) return true;
-    }
-    if (packet.udp) {
-        if (check_src && packet.udp->src_port == port) return true;
-        if (check_dst && packet.udp->dst_port == port) return true;
-    }
-    return false;
-}
-
-bool cidr_matches(const ParsedPacket &packet, std::uint32_t network, std::uint32_t mask,
-                  bool check_src, bool check_dst) {
-    if (!packet.ipv4) return false;
-    if (check_src && (packet.ipv4->src & mask) == (network & mask)) return true;
-    if (check_dst && (packet.ipv4->dst & mask) == (network & mask)) return true;
-    return false;
+bool side_matches(Direction direction, bool src_matches, bool dst_matches) {
+    return (direction != Direction::Dst && src_matches) ||
+           (direction != Direction::Src && dst_matches);
 }
 
 bool compare_len(std::size_t len, Compare cmp, std::uint32_t value) {
@@ -259,6 +255,7 @@ bool compare_len(std::size_t len, Compare cmp, std::uint32_t value) {
 }
 
 bool evaluate(const Node &node, const Frame &frame, const ParsedPacket &packet) {
+    const Direction dir = node.direction;
     switch (node.kind) {
         case NodeKind::And: return evaluate(*node.left, frame, packet) && evaluate(*node.right, frame, packet);
         case NodeKind::Or: return evaluate(*node.left, frame, packet) || evaluate(*node.right, frame, packet);
@@ -268,15 +265,18 @@ bool evaluate(const Node &node, const Frame &frame, const ParsedPacket &packet) 
         case NodeKind::Icmp: return packet.ipv4 && packet.ipv4->protocol == ip_proto::Icmp;
         case NodeKind::Arp: return packet.eth && packet.eth->ethertype == ethertype::Arp;
         case NodeKind::Ip: return packet.ipv4.has_value();
-        case NodeKind::Port: return port_matches(packet, node.port, true, true);
-        case NodeKind::SrcPort: return port_matches(packet, node.port, true, false);
-        case NodeKind::DstPort: return port_matches(packet, node.port, false, true);
-        case NodeKind::Host: return packet.ipv4 && (packet.ipv4->src == node.addr || packet.ipv4->dst == node.addr);
-        case NodeKind::SrcHost: return packet.ipv4 && packet.ipv4->src == node.addr;
-        case NodeKind::DstHost: return packet.ipv4 && packet.ipv4->dst == node.addr;
-        case NodeKind::Net: return cidr_matches(packet, node.addr, node.mask, true, true);
-        case NodeKind::SrcNet: return cidr_matches(packet, node.addr, node.mask, true, false);
-        case NodeKind::DstNet: return cidr_matches(packet, node.addr, node.mask, false, true);
+        case NodeKind::Port:
+            return (packet.tcp && side_matches(dir, packet.tcp->src_port == node.port,
+                                               packet.tcp->dst_port == node.port)) ||
+                   (packet.udp && side_matches(dir, packet.udp->src_port == node.port,
+                                               packet.udp->dst_port == node.port));
+        case NodeKind::Host:
+            return packet.ipv4 && side_matches(dir, packet.ipv4->src == node.addr,
+                                               packet.ipv4->dst == node.addr);
+        case NodeKind::Net:
+            return packet.ipv4 &&
+                   side_matches(dir, (packet.ipv4->src & node.mask) == (node.addr & node.mask),
+                                (packet.ipv4->dst & node.mask) == (node.addr & node.mask));
         case NodeKind::Len: return compare_len(frame.len, node.cmp, node.len_value);
         case NodeKind::TcpFlag: return packet.tcp && packet.tcp->flags.*node.flag_member;
     }

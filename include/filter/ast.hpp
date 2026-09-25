@@ -10,14 +10,14 @@ namespace sniffer::filter {
 enum class NodeKind {
     And, Or, Not,
     Tcp, Udp, Icmp, Arp, Ip,
-    Port, SrcPort, DstPort,
-    Host, SrcHost, DstHost,
-    Net, SrcNet, DstNet,
+    Port, Host, Net,
     Len,
     TcpFlag,
 };
 
 enum class Compare { Eq, Lt, Gt };
+
+enum class Direction { Any, Src, Dst };
 
 struct Node;
 using NodePtr = std::unique_ptr<Node>;
@@ -26,6 +26,7 @@ struct Node {
     NodeKind kind;
     NodePtr left;
     NodePtr right;
+    Direction direction = Direction::Any;
     std::uint32_t port = 0;
     std::uint32_t addr = 0;
     std::uint32_t mask = 0;
