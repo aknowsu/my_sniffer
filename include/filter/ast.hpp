@@ -1,38 +1,27 @@
 #pragma once
 
 #include <cstdint>
-#include <memory>
-
-#include "parse/tcp.hpp"
 
 namespace sniffer::filter {
 
-enum class NodeKind {
-    And, Or, Not,
-    Tcp, Udp, Icmp, Arp, Ip,
-    Port, Host, Net,
-    Len,
-    TcpFlag,
-};
-
+enum class TestKind { Tcp, Udp, Icmp, Arp, Ip, Port, Host, Net, Len, TcpFlag };
+enum class Op { And, Or, Not };
 enum class Compare { Eq, Lt, Gt };
-
 enum class Direction { Any, Src, Dst };
+enum class TcpFlagName { Syn, Ack, Fin, Rst, Psh, Urg, Ece, Cwr, Ns };
+enum class ItemKind { Test, Operator };
 
-struct Node;
-using NodePtr = std::unique_ptr<Node>;
-
-struct Node {
-    NodeKind kind;
-    NodePtr left;
-    NodePtr right;
+struct Item {
+    ItemKind item;
+    TestKind test = TestKind::Tcp;
+    Op op = Op::And;
     Direction direction = Direction::Any;
     std::uint32_t port = 0;
     std::uint32_t addr = 0;
     std::uint32_t mask = 0;
     std::uint32_t len_value = 0;
     Compare cmp = Compare::Eq;
-    bool TcpFlags::*flag_member = nullptr;
+    TcpFlagName flag = TcpFlagName::Syn;
 };
 
 }
