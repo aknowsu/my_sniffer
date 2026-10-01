@@ -79,7 +79,7 @@ int main(int argc, char **argv) {
     std::uint64_t bytes = 0;
 
     try {
-        sniffer::Capture capture("");
+        sniffer::Capture capture;
         g_capture.store(&capture);
         install_signal_handlers();
 

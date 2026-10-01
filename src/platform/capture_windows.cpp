@@ -6,7 +6,7 @@ namespace sniffer {
 
 struct Capture::Impl {};
 
-Capture::Capture(std::string) : impl_(nullptr) {
+Capture::Capture() : impl_(nullptr) {
     throw std::runtime_error("Windows capture backend not implemented yet");
 }
 

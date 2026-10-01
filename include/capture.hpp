@@ -3,7 +3,6 @@
 #include <cstddef>
 #include <cstdint>
 #include <functional>
-#include <string>
 
 namespace sniffer {
 
@@ -22,7 +21,7 @@ using FrameHandler = std::function<void(const Frame &)>;
 
 class Capture {
 public:
-    explicit Capture(std::string iface);
+    Capture();
     ~Capture();
 
     Capture(const Capture &) = delete;

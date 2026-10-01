@@ -10,7 +10,7 @@ itself — raw socket capture, Ethernet/IP/transport parsing, filtering and
 analysis. No `libpcap`, no packet-parsing or protocol-decoding library, no
 `<arpa/inet.h>`-style address helpers. The only system headers used are the
 minimal OS/kernel plumbing required to open a raw socket at all (`socket`,
-`bind`, `poll`, `ioctl`) — never anything that parses or resolves for you.
+`poll`) — never anything that parses or resolves for you.
 Libraries unrelated to networking (CLI parsing, logging, tests) may be used.
 
 ## What it does

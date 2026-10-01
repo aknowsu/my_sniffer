@@ -3,9 +3,7 @@
 #include "my_func/byteorder.hpp"
 
 #include <sys/socket.h>
-#include <linux/if_packet.h>
-#include <net/if.h>
-#include <sys/ioctl.h>
+
 #include <poll.h>
 #include <sys/time.h>
 #include <unistd.h>
@@ -24,18 +22,6 @@ constexpr int poll_timeout_ms = 200;
 constexpr std::size_t capture_buffer_size = 65536;
 constexpr std::int64_t microseconds_per_second = 1'000'000;
 
-int resolve_ifindex(int fd, const std::string &iface) {
-    if (iface.size() >= IFNAMSIZ) {
-        throw std::runtime_error("interface name too long: " + iface);
-    }
-    ifreq ifr{};
-    std::strncpy(ifr.ifr_name, iface.c_str(), IFNAMSIZ - 1);
-    if (::ioctl(fd, SIOCGIFINDEX, &ifr) < 0) {
-        throw std::runtime_error("unknown interface '" + iface + "': " + std::strerror(errno));
-    }
-    return ifr.ifr_ifindex;
-}
-
 }
 
 struct Capture::Impl {
@@ -43,26 +29,11 @@ struct Capture::Impl {
     std::atomic<bool> running{false};
 };
 
-Capture::Capture(std::string iface) : impl_(nullptr) {
+Capture::Capture() : impl_(nullptr) {
     const int fd = ::socket(AF_PACKET, SOCK_RAW, my::hton16(eth_p_all));
     if (fd < 0) {
         throw std::runtime_error(std::string("socket(AF_PACKET): ") +
                                  std::strerror(errno));
-    }
-
-    if (!iface.empty()) {
-        try {
-            sockaddr_ll addr{};
-            addr.sll_family = AF_PACKET;
-            addr.sll_protocol = my::hton16(eth_p_all);
-            addr.sll_ifindex = resolve_ifindex(fd, iface);
-            if (::bind(fd, reinterpret_cast<sockaddr *>(&addr), sizeof addr) < 0) {
-                throw std::runtime_error(std::string("bind: ") + std::strerror(errno));
-            }
-        } catch (...) {
-            ::close(fd);
-            throw;
-        }
     }
 
     impl_ = new Impl;
