@@ -32,7 +32,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     target_compile_definitions(my_sniffer PRIVATE SNIFFER_PLATFORM_LINUX=1)
 elseif(WIN32)
     target_sources(my_sniffer PRIVATE src/platform/capture_windows.cpp)
-    target_compile_definitions(my_sniffer PRIVATE SNIFFER_PLATFORM_WINDOWS=1)
+    target_compile_definitions(my_sniffer PRIVATE SNIFFER_PLATFORM_WINDOWS=1 _CRT_SECURE_NO_WARNINGS)
 
     if(NOT NPCAP_SDK_DIR)
         set(NPCAP_SDK_DIR "$ENV{NPCAP_SDK_DIR}" CACHE PATH "Path to the Npcap SDK")
