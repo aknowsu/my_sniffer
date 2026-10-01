@@ -71,7 +71,7 @@ void Capture::run(const FrameHandler &on_frame) {
         }
 
         timeval now{};
-        ::gettimeofday(&now, nullptr);
+        gettimeofday(&now, nullptr);
         const Frame frame{buf, static_cast<std::size_t>(received),
                           static_cast<std::int64_t>(now.tv_sec) * microseconds_per_second +
                               now.tv_usec};

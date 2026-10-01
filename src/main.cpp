@@ -4,7 +4,11 @@
 #include "parse/packet.hpp"
 #include "viewer.hpp"
 
+#ifdef _WIN32
+#include <windows.h>
+#else
 #include <signal.h>
+#endif
 #include <atomic>
 #include <cerrno>
 #include <cstdint>
@@ -23,6 +27,21 @@ struct FileCloser {
     void operator()(std::FILE *file) const { std::fclose(file); }
 };
 
+#ifdef _WIN32
+
+BOOL WINAPI on_console_event(DWORD) {
+    if (sniffer::Capture *capture = g_capture.load()) {
+        capture->stop();
+    }
+    return TRUE;
+}
+
+void install_signal_handlers() {
+    SetConsoleCtrlHandler(on_console_event, TRUE);
+}
+
+#else
+
 void on_signal(int) {
     if (sniffer::Capture *capture = g_capture.load()) {
         capture->stop();
@@ -37,6 +56,8 @@ void install_signal_handlers() {
     sigaction(SIGINT, &sa, nullptr);
     sigaction(SIGTERM, &sa, nullptr);
 }
+
+#endif
 
 }
 
