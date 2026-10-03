@@ -18,8 +18,6 @@ constexpr std::int64_t days_epoch_offset = 719468;
 constexpr int days_per_era = 146097;
 constexpr int years_per_era = 400;
 
-// Howard Hinnant's days_from_civil algorithm: proleptic Gregorian
-// calendar date -> days since 1970-01-01, pure arithmetic, no OS call.
 std::int64_t days_from_civil(int year, int month, int day) {
     year -= month <= 2 ? 1 : 0;
     const int era = (year >= 0 ? year : year - 399) / years_per_era;
@@ -67,10 +65,10 @@ std::int64_t parse_timestamp(std::string_view text) {
     const int second = std::stoi(std::string(text.substr(17, 2)));
     const int millis = std::stoi(std::string(text.substr(20, 3)));
 
-    const std::int64_t days = days_from_civil(year, month, day);
-    const std::int64_t seconds = days * seconds_per_day + hour * seconds_per_hour +
-                                 minute * seconds_per_minute + second;
-    return seconds * microseconds_per_second + millis * microseconds_per_millisecond;
+    const std::int64_t days_since_epoch = days_from_civil(year, month, day);
+    const std::int64_t seconds_since_epoch = days_since_epoch * seconds_per_day + hour * seconds_per_hour +
+                                             minute * seconds_per_minute + second;
+    return seconds_since_epoch * microseconds_per_second + millis * microseconds_per_millisecond;
 }
 
 void parse_address_part(const std::string &part, LogEntry &entry) {
