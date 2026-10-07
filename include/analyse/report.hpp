@@ -21,9 +21,8 @@ struct Whitelist {
 Whitelist read_whitelist(const std::string &path);
 
 std::vector<Alert> detect_spikes(const std::vector<LogEntry> &entries);
-std::vector<Alert> detect_service_requests(const std::vector<LogEntry> &entries);
-std::vector<Alert> detect_error_bursts(const std::vector<LogEntry> &entries);
 std::vector<Alert> detect_beaconing(const std::vector<LogEntry> &entries);
 std::vector<Alert> detect_foreign_ip(const std::vector<LogEntry> &entries, const Whitelist &whitelist);
+std::vector<Alert> detect_unknown_protocol(const std::vector<LogEntry> &entries);
 
 }

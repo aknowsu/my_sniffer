@@ -133,9 +133,8 @@ my_sniffer -r capture.log --analyse --whitelist allowed.txt
 | Detection | Flags when |
 | --- | --- |
 | Traffic spikes | an IP's bytes/second jumps far above its own usual volume |
-| Excessive service requests | too many connection attempts to the same IP:port in 10s |
-| Error bursts | too many TCP RSTs within 1 second |
 | Beaconing | a destination is contacted at suspiciously regular intervals |
+| Unknown protocol on standard port | traffic on port 22/80/8080 isn't TCP |
 | Foreign IP (needs `--whitelist`) | a destination isn't covered by any entry in the whitelist |
 
 `--whitelist <file>` is optional — one IPv4 address or CIDR range per line.

@@ -85,9 +85,8 @@ int main(int argc, char **argv) {
             alerts.insert(alerts.end(), found.begin(), found.end());
         };
         append(sniffer::analyse::detect_spikes(entries));
-        append(sniffer::analyse::detect_service_requests(entries));
-        append(sniffer::analyse::detect_error_bursts(entries));
         append(sniffer::analyse::detect_beaconing(entries));
+        append(sniffer::analyse::detect_unknown_protocol(entries));
         if (opt.whitelist_path) {
             sniffer::analyse::Whitelist whitelist;
             try {
