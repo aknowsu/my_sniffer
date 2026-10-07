@@ -17,14 +17,17 @@ Libraries unrelated to networking (CLI parsing, logging, tests) may be used.
 
 Raw capture off the wire, decoding of Ethernet (with VLAN tags), IPv4, TCP
 and UDP with checksum verification, a packet viewer (summary line, per-field
-detail, hexdump), and a filter expression language (`-f`) to only display
-matching packets — see [below](#filter-language).
+detail, hexdump), a filter expression language (`-f`) to only display
+matching packets (see [below](#filter-language)), a text log (`-w`), and a
+behavioural analysis engine over a replayed log (`-r --analyse`, see
+[below](#analysis)).
 
 ## Supported platforms
 
-- **Linux** — capture backend implemented (`AF_PACKET` / `SOCK_RAW`).
-- **Windows** — capture backend not implemented; everything else (parsing,
-  filtering, display) is platform-independent.
+- **Linux** — capture backend implemented and tested (`AF_PACKET` / `SOCK_RAW`).
+- **Windows** — capture backend implemented via Npcap's low-level driver API
+  (`Packet32.h`), for raw capture only — all parsing stays our own code.
+  Not yet verified on a real Windows machine.
 
 ## Requirements
 
@@ -80,7 +83,9 @@ sudo ./build/my_sniffer
 Capture always listens on every interface — there is no way to target a
 single one.
 
-**Windows:** not available yet — the capture backend is a stub.
+**Windows:** run from an Administrator terminal. Requires
+[Npcap](https://npcap.com/#download) installed on the machine, and its SDK
+available at build time (see [Build](#build)).
 
 ### Usage
 
@@ -89,11 +94,14 @@ my_sniffer [options]
 
   -f, --filter <expr>      only show packets matching <expr> (see below)
   -w, --write <file>       log the displayed packets to <file> (see below)
-  -r, --read <file>        replay a saved capture (not implemented)
+  -r, --read <file>        read packets back from a file written by -w,
+                            only used together with --analyse
   -v, --verbose            print every decoded field + a hexdump per packet
       --decoded-only       hide packets whose protocol wasn't decoded
-      --analyse            run the behavioural analysis engine over a saved
-                            capture, i.e. together with -r (not implemented)
+      --analyse            run the behavioural analysis engine over the
+                            capture given with -r (requires -r, see below)
+      --whitelist <file>   one IP or CIDR per line: destinations allowed;
+                            used with --analyse to flag anything else
   -h, --help               show help and exit
   -V, --version            show version and exit
 ```
@@ -111,6 +119,27 @@ the millisecond:
 
 `-f` and `--decoded-only` apply to the log too: only packets that pass are
 written. The log is flushed after each packet.
+
+## Analysis
+
+`-r <file> --analyse` reads back a file written by `-w` and runs a set of
+behavioural detections over it — no live capture, no privileges needed:
+
+```
+my_sniffer -r capture.log --analyse
+my_sniffer -r capture.log --analyse --whitelist allowed.txt
+```
+
+| Detection | Flags when |
+| --- | --- |
+| Traffic spikes | an IP's bytes/second jumps far above its own usual volume |
+| Excessive service requests | too many connection attempts to the same IP:port in 10s |
+| Error bursts | too many TCP RSTs within 1 second |
+| Beaconing | a destination is contacted at suspiciously regular intervals |
+| Foreign IP (needs `--whitelist`) | a destination isn't covered by any entry in the whitelist |
+
+`--whitelist <file>` is optional — one IPv4 address or CIDR range per line.
+Without it, the foreign-IP detection is simply skipped, not assumed.
 
 ## Filter language
 
@@ -149,17 +178,21 @@ my_sniffer/
 │   ├── capture.hpp         common capture interface (PImpl)
 │   ├── cli.hpp             command-line options
 │   ├── viewer.hpp          packet display
+│   ├── log.hpp             -w's text format read back into LogEntry records
 │   ├── my_func/            byte-order, buffer reads, addresses, checksums, hexdump
 │   ├── parse/              cursor + one header per protocol layer
-│   └── filter/             filter tokenizer, AST, parser/evaluator
+│   ├── filter/             tokenizer, postfix AST, Filter
+│   └── analyse/            behavioural detections over a replayed capture
 └── src/
     ├── main.cpp            entry point — wires capture, filter, parsing, display
     ├── cli.cpp             option parsing / --help
     ├── viewer.cpp           packet display
+    ├── log.cpp              parses -w's output back into LogEntry records
     ├── my_func/            one file per helper function
     ├── parse/               one file per protocol layer + the orchestrator
-    ├── filter/               tokenizer + recursive-descent parser/evaluator
+    ├── filter/               parse.cpp (reads the expression) / match.cpp (tests a packet)
+    ├── analyse/              one file per detection
     └── platform/
         ├── capture_linux.cpp     AF_PACKET / SOCK_RAW backend
-        └── capture_windows.cpp   stub, not implemented
+        └── capture_windows.cpp   Npcap (Packet32.h) backend
 ```
