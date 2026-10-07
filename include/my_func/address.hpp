@@ -13,4 +13,6 @@ std::optional<std::uint32_t> ipv4_from_text(std::string_view text);
 std::string mac_to_text(const std::uint8_t mac[6]);
 bool mac_from_text(std::string_view text, std::uint8_t out[6]);
 
+bool cidr_contains(std::uint32_t network, std::uint8_t prefix_len, std::uint32_t addr);
+
 }
