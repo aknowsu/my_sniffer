@@ -13,7 +13,7 @@
 namespace sniffer {
 namespace {
 
-enum class OptId { Filter, Write, Read, Verbose, Analyse, DecodedOnly, Help, Version };
+enum class OptId { Filter, Write, Read, Whitelist, Verbose, Analyse, DecodedOnly, Help, Version };
 
 struct OptSpec {
     OptId id;
@@ -26,6 +26,7 @@ constexpr OptSpec option_table[] = {
     {OptId::Filter, 'f', "filter", true},
     {OptId::Write, 'w', "write", true},
     {OptId::Read, 'r', "read", true},
+    {OptId::Whitelist, '\0', "whitelist", true},
     {OptId::Verbose, 'v', "verbose", false},
     {OptId::Analyse, 'a', "analyse", false},
     {OptId::DecodedOnly, 'd', "decoded-only", false},
@@ -61,11 +62,14 @@ void print_usage(const char *argv0) {
         "  -w, --write <file>       Log the displayed packets to <file>, same\n"
         "                           layout as the screen (-v included), each\n"
         "                           prefixed with its UTC time.\n"
-        "  -r, --read <file>        Replay a saved capture instead of\n"
-        "                           capturing live. Not implemented yet.\n"
+        "  -r, --read <file>        Read packets back from a file written by -w.\n"
+        "                           Only used together with --analyse.\n"
         "  -v, --verbose            Print a hexdump for every packet.\n"
-        "      --analyse            Run the behavioural analysis engine over a\n"
-        "                           saved capture (-r). Not implemented yet.\n"
+        "      --analyse            Run the behavioural analysis engine over the\n"
+        "                           capture given with -r (requires -r).\n"
+        "      --whitelist <file>   One IP or CIDR per line: addresses allowed\n"
+        "                           as destinations. Used with --analyse to flag\n"
+        "                           connections to anything else. Optional.\n"
         "      --decoded-only       Only show packets whose protocol is\n"
         "                           decoded (hide the 'unknown' ones).\n"
         "  -h, --help               Show this help and exit.\n"
@@ -157,11 +161,24 @@ ParseResult parse_args(int argc, char **argv) {
         case OptId::Filter: opt.filter = std::string(value); break;
         case OptId::Write: opt.write_path = std::string(value); break;
         case OptId::Read: opt.read_path = std::string(value); break;
+        case OptId::Whitelist: opt.whitelist_path = std::string(value); break;
         }
     }
 
     if (opt.write_path && opt.read_path) {
         fail("--write and --read are mutually exclusive", {});
+        return result;
+    }
+    if (opt.read_path && !opt.analyse) {
+        fail("-r/--read requires --analyse", {});
+        return result;
+    }
+    if (opt.analyse && !opt.read_path) {
+        fail("--analyse requires -r/--read", {});
+        return result;
+    }
+    if (opt.whitelist_path && !opt.analyse) {
+        fail("--whitelist requires --analyse", {});
         return result;
     }
 

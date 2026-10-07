@@ -1,6 +1,8 @@
+#include "analyse/report.hpp"
 #include "capture.hpp"
 #include "cli.hpp"
 #include "filter/filter.hpp"
+#include "log.hpp"
 #include "parse/packet.hpp"
 #include "viewer.hpp"
 
@@ -69,9 +71,39 @@ int main(int argc, char **argv) {
     const sniffer::Options &opt = parsed.options;
     const sniffer::ViewOptions view{opt.verbose, opt.decoded_only};
 
-    if (opt.read_path || opt.analyse) {
-        std::fprintf(stderr, "my_sniffer: -r/--read and --analyse are not implemented yet\n");
-        return 2;
+    if (opt.analyse) {
+        std::vector<sniffer::LogEntry> entries;
+        try {
+            entries = sniffer::read_log(*opt.read_path);
+        } catch (const std::exception &e) {
+            std::fprintf(stderr, "my_sniffer: %s\n", e.what());
+            return 1;
+        }
+
+        std::vector<sniffer::analyse::Alert> alerts;
+        const auto append = [&](std::vector<sniffer::analyse::Alert> found) {
+            alerts.insert(alerts.end(), found.begin(), found.end());
+        };
+        append(sniffer::analyse::detect_spikes(entries));
+        append(sniffer::analyse::detect_service_requests(entries));
+        append(sniffer::analyse::detect_error_bursts(entries));
+        append(sniffer::analyse::detect_beaconing(entries));
+        if (opt.whitelist_path) {
+            sniffer::analyse::Whitelist whitelist;
+            try {
+                whitelist = sniffer::analyse::read_whitelist(*opt.whitelist_path);
+            } catch (const std::exception &e) {
+                std::fprintf(stderr, "my_sniffer: %s\n", e.what());
+                return 1;
+            }
+            append(sniffer::analyse::detect_foreign_ip(entries, whitelist));
+        }
+
+        for (const sniffer::analyse::Alert &alert : alerts) {
+            std::printf("[%s] %s\n", alert.kind.c_str(), alert.description.c_str());
+        }
+        std::printf("\n%zu entries analysed, %zu alerts\n", entries.size(), alerts.size());
+        return 0;
     }
 
     std::optional<sniffer::filter::Filter> filter;

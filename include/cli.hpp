@@ -9,6 +9,7 @@ struct Options {
     std::optional<std::string> filter;
     std::optional<std::string> write_path;
     std::optional<std::string> read_path;
+    std::optional<std::string> whitelist_path;
     bool verbose = false;
     bool analyse = false;
     bool decoded_only = false;
