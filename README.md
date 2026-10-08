@@ -3,31 +3,17 @@
 A cross-platform network packet sniffer built from scratch: raw capture,
 protocol parsing, filtering and behavioural analysis — no networking library.
 
-## Why "from scratch"
-
-Every layer between the wire and an application is handled by this project
-itself — raw socket capture, Ethernet/IP/transport parsing, filtering and
-analysis. No `libpcap`, no packet-parsing or protocol-decoding library, no
-`<arpa/inet.h>`-style address helpers. The only system headers used are the
-minimal OS/kernel plumbing required to open a raw socket at all (`socket`,
-`poll`) — never anything that parses or resolves for you.
-Libraries unrelated to networking (CLI parsing, logging, tests) may be used.
-
 ## What it does
 
-Raw capture off the wire, decoding of Ethernet (with VLAN tags), IPv4, TCP
-and UDP with checksum verification, a packet viewer (summary line, per-field
-detail, hexdump), a filter expression language (`-f`) to only display
-matching packets (see [below](#filter-language)), a text log (`-w`), and a
-behavioural analysis engine over a replayed log (`-r --analyse`, see
+Raw capture, Ethernet/IPv4/TCP/UDP decoding with checksums, a packet viewer,
+a filter language (`-f`, see [below](#filter-language)), a text log (`-w`),
+and a behavioural analysis engine over a replayed log (`-r --analyse`, see
 [below](#analysis)).
 
 ## Supported platforms
 
-- **Linux** — capture backend implemented and tested (`AF_PACKET` / `SOCK_RAW`).
-- **Windows** — capture backend implemented via Npcap's low-level driver API
-  (`Packet32.h`), for raw capture only — all parsing stays our own code.
-  Not yet verified on a real Windows machine.
+- **Linux** — `AF_PACKET` / `SOCK_RAW`.
+- **Windows** — Npcap's low-level driver API (`Packet32.h`), raw capture only.
 
 ## Requirements
 
@@ -67,10 +53,8 @@ Installs the `my_sniffer` binary under `<prefix>/bin`.
 
 ## Running
 
-Capturing raw traffic needs elevated privileges. `scripts/install-linux.sh`
-and `scripts/install-windows.ps1` automate the steps below (build + set up
-privileges) — use them, or do it by hand if you'd rather not run a script
-or want more control over the steps.
+Capturing raw traffic needs elevated privileges.
+`scripts/install-linux.sh` / `install-windows.ps1` automate the steps below.
 
 **Linux:**
 
@@ -89,9 +73,6 @@ sudo setcap cap_net_raw,cap_net_admin+ep ./build/my_sniffer
 sudo ./build/my_sniffer
 ```
 
-Capture always listens on every interface — there is no way to target a
-single one.
-
 **Windows:**
 
 ```pwsh
@@ -109,14 +90,14 @@ my_sniffer [options]
 
   -f, --filter <expr>      only show packets matching <expr> (see below)
   -w, --write <file>       log the displayed packets to <file> (see below)
-  -r, --read <file>        read packets back from a file written by -w,
-                            only used together with --analyse
   -v, --verbose            print every decoded field + a hexdump per packet
       --decoded-only       hide packets whose protocol wasn't decoded
-      --analyse            run the behavioural analysis engine over the
-                            capture given with -r (requires -r, see below)
+
+  -r, --read <file>        read packets back from a file written by -w
+      --analyse            run the behavioural analysis engine over -r (see below)
       --whitelist <file>   one IP or CIDR per line: destinations allowed;
                             used with --analyse to flag anything else
+
   -h, --help               show help and exit
   -V, --version            show version and exit
 ```
