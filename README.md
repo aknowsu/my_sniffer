@@ -121,6 +121,19 @@ my_sniffer [options]
   -V, --version            show version and exit
 ```
 
+## Testing
+
+```sh
+./test/full-test.sh [build-dir]
+```
+
+Builds the project (default build dir `build`), then exercises normal
+mode, `-v`, `-w`, and `-r --analyse` against real captured traffic, plus a
+crafted case (`test/analyse-sample.log` + `test/whitelist.txt`) that
+reliably triggers all 4 analysis detections regardless of what real
+traffic looks like. Needs capture privileges (see [Running](#running)) —
+run as root, or `./scripts/install-linux.sh` first.
+
 ## Logging
 
 `-w <file>` writes every displayed packet to `<file>` (created or truncated),
@@ -191,6 +204,10 @@ my_sniffer/
 ├── scripts/
 │   ├── install-linux.sh    build + setcap, see Running
 │   └── install-windows.ps1 checks for Npcap, builds
+├── test/
+│   ├── full-test.sh        see Testing
+│   ├── analyse-sample.log  crafted case for the 4 analysis detections
+│   └── whitelist.txt       matching --whitelist for the sample above
 ├── include/
 │   ├── capture.hpp         common capture interface (PImpl)
 │   ├── cli.hpp             command-line options
