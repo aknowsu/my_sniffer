@@ -4,14 +4,15 @@
 # README.md's Running section) -- run as root, or setcap the binary first
 # (scripts/install-linux.sh does that).
 set -e
+cd "$(dirname "$0")/.."
 
 BUILD_DIR="${1:-build}"
 BIN="$BUILD_DIR/my_sniffer"
 DURATION=3
 LOG="$(mktemp)"
-SYNTHETIC_LOG="$(mktemp)"
-WHITELIST="$(mktemp)"
-trap 'rm -f "$LOG" "$SYNTHETIC_LOG" "$WHITELIST"' EXIT
+trap 'rm -f "$LOG"' EXIT
+SYNTHETIC_LOG="test/analyse-sample.log"
+WHITELIST="test/whitelist.txt"
 
 echo "== building =="
 cmake -S . -B "$BUILD_DIR" >/dev/null
@@ -24,7 +25,6 @@ if [ "$(id -u)" -ne 0 ] && ! getcap "$BIN" 2>/dev/null | grep -q cap_net_raw; th
     exit 1
 fi
 
-# Background traffic so there is always something to capture.
 ( ping -c 10 1.1.1.1 >/dev/null 2>&1 & )
 ( curl -s -o /dev/null https://example.com 2>/dev/null & )
 
@@ -52,24 +52,10 @@ echo "OK"
 echo "$OUT"
 
 echo "== 5) --analyse detections (synthetic cases) =="
-{
-    # traffic_spike: 20 quiet seconds then one huge one, same source
-    for s in $(seq 0 19); do
-        printf '2025-09-23 17:00:%02d.000  10.0.0.9:51000 > 8.8.8.8:443  TCP [ACK]  ttl=64  100 bytes\n' "$s"
-    done
-    printf '2025-09-23 17:00:20.000  10.0.0.9:51000 > 8.8.8.8:443  TCP [ACK]  ttl=64  1000000 bytes\n'
-
-    # beaconing: 5 connection attempts to the same destination, 10s apart
-    for s in 0 10 20 30 40; do
-        printf '2025-09-23 17:01:%02d.000  10.0.0.9:52000 > 203.0.113.50:9999  TCP [SYN]  ttl=64  60 bytes\n' "$s"
-    done
-
-    # unknown_protocol: UDP on port 80, which should be TCP (HTTP)
-    printf '2025-09-23 17:02:00.000  10.0.0.9:53000 > 93.184.216.2:80  UDP  ttl=64  60 bytes\n'
-} > "$SYNTHETIC_LOG"
-# foreign_ip: none of the destinations above are in this whitelist
-echo "192.168.0.0/16" > "$WHITELIST"
-
+# test/analyse-sample.log is a crafted log, hand-built to trigger all 4
+# detections regardless of what real traffic looks like (see its content:
+# a traffic spike, a beaconing destination, UDP on port 80, and IPs outside
+# test/whitelist.txt).
 OUT="$("$BIN" -r "$SYNTHETIC_LOG" --analyse --whitelist "$WHITELIST")"
 for kind in traffic_spike beaconing unknown_protocol foreign_ip; do
     echo "$OUT" | grep -q "\[$kind\]" || { echo "FAIL: [$kind] was not detected"; echo "$OUT"; exit 1; }
