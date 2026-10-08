@@ -1,7 +1,23 @@
 #!/bin/sh
-# Builds my_sniffer (Release) and grants it capture capability via setcap,
-# so it can run without sudo. See README.md for the equivalent manual steps.
+# Installs build dependencies if missing, builds my_sniffer (Release), and
+# grants it capture capability via setcap, so it can run without sudo.
+# See README.md for the equivalent manual steps.
 set -e
+
+if ! command -v cmake >/dev/null 2>&1 || { ! command -v g++ >/dev/null 2>&1 && ! command -v clang++ >/dev/null 2>&1; }; then
+    echo "Installing build dependencies (cmake, g++)..."
+    if command -v apt-get >/dev/null 2>&1; then
+        sudo apt-get update
+        sudo apt-get install -y cmake g++
+    elif command -v dnf >/dev/null 2>&1; then
+        sudo dnf install -y cmake gcc-c++
+    elif command -v pacman >/dev/null 2>&1; then
+        sudo pacman -S --needed --noconfirm cmake gcc
+    else
+        echo "No known package manager found. Install cmake and a C++20 compiler manually, then re-run this script." >&2
+        exit 1
+    fi
+fi
 
 BUILD_DIR="${1:-build}"
 

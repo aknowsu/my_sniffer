@@ -61,7 +61,7 @@ system-wide [install](#install).
 **Linux:**
 
 ```sh
-./scripts/setup-linux.sh   # builds (Release) and runs setcap for you
+./scripts/setup-linux.sh   # installs deps if missing, builds (Release), setcap
 ```
 
 Equivalent by hand:
@@ -78,7 +78,7 @@ sudo ./build/my_sniffer
 **Windows:**
 
 ```pwsh
-.\scripts\setup-windows.ps1   # checks for Npcap, builds (Release)
+.\scripts\setup-windows.ps1   # installs CMake/checks Npcap, builds (Release)
 ```
 
 Equivalent by hand: install [Npcap](https://npcap.com/#download), make its
@@ -185,8 +185,8 @@ tighter than `and`, which binds tighter than `or`.
 my_sniffer/
 ├── CMakeLists.txt          build + install, per-OS capture backend
 ├── scripts/
-│   ├── setup-linux.sh    build + setcap, see Running
-│   └── setup-windows.ps1 checks for Npcap, builds
+│   ├── setup-linux.sh    deps + build + setcap, see Running
+│   └── setup-windows.ps1 deps (CMake/Npcap) + build
 ├── test/
 │   ├── full-test.sh        see Testing
 │   ├── analyse-sample.log  crafted case for the 4 analysis detections
