@@ -67,9 +67,18 @@ Installs the `my_sniffer` binary under `<prefix>/bin`.
 
 ## Running
 
-Capturing raw traffic needs elevated privileges.
+Capturing raw traffic needs elevated privileges. `scripts/install-linux.sh`
+and `scripts/install-windows.ps1` automate the steps below (build + set up
+privileges) — use them, or do it by hand if you'd rather not run a script
+or want more control over the steps.
 
 **Linux:**
+
+```sh
+./scripts/install-linux.sh   # builds (Release) and runs setcap for you
+```
+
+Equivalent by hand:
 
 ```sh
 # Option A — grant the capability once (recommended)
@@ -83,9 +92,15 @@ sudo ./build/my_sniffer
 Capture always listens on every interface — there is no way to target a
 single one.
 
-**Windows:** run from an Administrator terminal. Requires
-[Npcap](https://npcap.com/#download) installed on the machine, and its SDK
-available at build time (see [Build](#build)).
+**Windows:**
+
+```pwsh
+.\scripts\install-windows.ps1   # checks for Npcap, builds (Release)
+```
+
+Equivalent by hand: install [Npcap](https://npcap.com/#download), make its
+SDK available at build time (see [Build](#build)), then build and run from
+an Administrator terminal — capture needs elevation.
 
 ### Usage
 
@@ -173,6 +188,9 @@ tighter than `and`, which binds tighter than `or`.
 ```
 my_sniffer/
 ├── CMakeLists.txt          build + install, per-OS capture backend
+├── scripts/
+│   ├── install-linux.sh    build + setcap, see Running
+│   └── install-windows.ps1 checks for Npcap, builds
 ├── include/
 │   ├── capture.hpp         common capture interface (PImpl)
 │   ├── cli.hpp             command-line options
