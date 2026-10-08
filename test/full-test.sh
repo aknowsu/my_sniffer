@@ -2,7 +2,7 @@
 # Smoke test: builds my_sniffer, then exercises normal mode, -v, -f, -w, -r
 # and --analyse against real captured traffic. Needs capture privileges (see
 # README.md's Running section) -- run as root, or setcap the binary first
-# (scripts/install-linux.sh does that).
+# (scripts/setup-linux.sh does that).
 set -e
 cd "$(dirname "$0")/.."
 
@@ -21,7 +21,7 @@ cmake --build "$BUILD_DIR" -j"$(nproc)" >/dev/null
 
 if [ "$(id -u)" -ne 0 ] && ! getcap "$BIN" 2>/dev/null | grep -q cap_net_raw; then
     echo "FAIL: $BIN has no capture privileges." >&2
-    echo "Run as root, or first: ./scripts/install-linux.sh $BUILD_DIR" >&2
+    echo "Run as root, or first: ./scripts/setup-linux.sh $BUILD_DIR" >&2
     exit 1
 fi
 

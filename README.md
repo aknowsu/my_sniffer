@@ -54,12 +54,14 @@ Installs the `my_sniffer` binary under `<prefix>/bin`.
 ## Running
 
 Capturing raw traffic needs elevated privileges.
-`scripts/install-linux.sh` / `install-windows.ps1` automate the steps below.
+`scripts/setup-linux.sh` / `setup-windows.ps1` automate the steps below —
+they build and set up privileges in the `build/` dir, they don't do a
+system-wide [install](#install).
 
 **Linux:**
 
 ```sh
-./scripts/install-linux.sh   # builds (Release) and runs setcap for you
+./scripts/setup-linux.sh   # builds (Release) and runs setcap for you
 ```
 
 Equivalent by hand:
@@ -76,7 +78,7 @@ sudo ./build/my_sniffer
 **Windows:**
 
 ```pwsh
-.\scripts\install-windows.ps1   # checks for Npcap, builds (Release)
+.\scripts\setup-windows.ps1   # checks for Npcap, builds (Release)
 ```
 
 Equivalent by hand: install [Npcap](https://npcap.com/#download), make its
@@ -113,7 +115,7 @@ mode, `-v`, `-f`, `-w`, and `-r --analyse` against real captured traffic, plus a
 crafted case (`test/analyse-sample.log` + `test/whitelist.txt`) that
 reliably triggers all 4 analysis detections regardless of what real
 traffic looks like. Needs capture privileges (see [Running](#running)) —
-run as root, or `./scripts/install-linux.sh` first.
+run as root, or `./scripts/setup-linux.sh` first.
 
 ## Logging
 
@@ -183,8 +185,8 @@ tighter than `and`, which binds tighter than `or`.
 my_sniffer/
 ├── CMakeLists.txt          build + install, per-OS capture backend
 ├── scripts/
-│   ├── install-linux.sh    build + setcap, see Running
-│   └── install-windows.ps1 checks for Npcap, builds
+│   ├── setup-linux.sh    build + setcap, see Running
+│   └── setup-windows.ps1 checks for Npcap, builds
 ├── test/
 │   ├── full-test.sh        see Testing
 │   ├── analyse-sample.log  crafted case for the 4 analysis detections
