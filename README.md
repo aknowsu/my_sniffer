@@ -88,13 +88,13 @@ an Administrator terminal — capture needs elevation.
 ```
 my_sniffer [options]
 
-  -f, --filter <expr>      only show packets matching <expr> (see below)
-  -w, --write <file>       log the displayed packets to <file> (see below)
+  -f, --filter <expr>      only show packets matching <expr>
+  -w, --write <file>       log the displayed packets to <file>
   -v, --verbose            print every decoded field + a hexdump per packet
       --decoded-only       hide packets whose protocol wasn't decoded
 
   -r, --read <file>        read packets back from a file written by -w
-      --analyse            run the behavioural analysis engine over -r (see below)
+      --analyse            run the behavioural analysis engine over -r
       --whitelist <file>   one IP or CIDR per line: destinations allowed;
                             used with --analyse to flag anything else
 
@@ -109,7 +109,7 @@ my_sniffer [options]
 ```
 
 Builds the project (default build dir `build`), then exercises normal
-mode, `-v`, `-w`, and `-r --analyse` against real captured traffic, plus a
+mode, `-v`, `-f`, `-w`, and `-r --analyse` against real captured traffic, plus a
 crafted case (`test/analyse-sample.log` + `test/whitelist.txt`) that
 reliably triggers all 4 analysis detections regardless of what real
 traffic looks like. Needs capture privileges (see [Running](#running)) —

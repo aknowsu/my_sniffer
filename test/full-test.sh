@@ -1,6 +1,6 @@
 #!/bin/sh
-# Smoke test: builds my_sniffer, then exercises normal mode, -v, -w, -r and
-# --analyse against real captured traffic. Needs capture privileges (see
+# Smoke test: builds my_sniffer, then exercises normal mode, -v, -f, -w, -r
+# and --analyse against real captured traffic. Needs capture privileges (see
 # README.md's Running section) -- run as root, or setcap the binary first
 # (scripts/install-linux.sh does that).
 set -e
@@ -39,19 +39,24 @@ echo "$OUT" | grep -q "packets," || { echo "FAIL: no summary line"; echo "$OUT";
 echo "$OUT" | grep -q "ttl=" || { echo "FAIL: no decoded field in -v output"; exit 1; }
 echo "OK"
 
-echo "== 3) -w (write log) =="
+echo "== 3) -f (filter) =="
+OUT="$(timeout "$DURATION" "$BIN" -f "tcp or udp or icmp" || true)"
+echo "$OUT" | grep -q "packets," || { echo "FAIL: no summary line"; echo "$OUT"; exit 1; }
+echo "OK"
+
+echo "== 4) -w (write log) =="
 timeout "$DURATION" "$BIN" -w "$LOG" >/dev/null || true
 [ -s "$LOG" ] || { echo "FAIL: $LOG is empty"; exit 1; }
 grep -qE "^[0-9]{4}-[0-9]{2}-[0-9]{2} " "$LOG" || { echo "FAIL: $LOG has no timestamped line"; exit 1; }
 echo "OK ($(wc -l < "$LOG") lines)"
 
-echo "== 4) -r + --analyse =="
+echo "== 5) -r + --analyse =="
 OUT="$("$BIN" -r "$LOG" --analyse)"
 echo "$OUT" | grep -q "entries analysed" || { echo "FAIL: no analysis summary"; echo "$OUT"; exit 1; }
 echo "OK"
 echo "$OUT"
 
-echo "== 5) --analyse detections (synthetic cases) =="
+echo "== 6) --analyse detections (synthetic cases) =="
 # test/analyse-sample.log is a crafted log, hand-built to trigger all 4
 # detections regardless of what real traffic looks like (see its content:
 # a traffic spike, a beaconing destination, UDP on port 80, and IPs outside
