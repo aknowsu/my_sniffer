@@ -4,17 +4,19 @@
 # See README.md for the equivalent manual steps.
 set -e
 
-if ! command -v cmake >/dev/null 2>&1 || { ! command -v g++ >/dev/null 2>&1 && ! command -v clang++ >/dev/null 2>&1; }; then
-    echo "Installing build dependencies (cmake, g++)..."
+if ! command -v cmake >/dev/null 2>&1 || ! command -v make >/dev/null 2>&1 || \
+   ! command -v setcap >/dev/null 2>&1 || \
+   { ! command -v g++ >/dev/null 2>&1 && ! command -v clang++ >/dev/null 2>&1; }; then
+    echo "Installing build dependencies (cmake, g++, make, setcap)..."
     if command -v apt-get >/dev/null 2>&1; then
         sudo apt-get update
-        sudo apt-get install -y cmake g++
+        sudo apt-get install -y cmake g++ make libcap2-bin
     elif command -v dnf >/dev/null 2>&1; then
-        sudo dnf install -y cmake gcc-c++
+        sudo dnf install -y cmake gcc-c++ make libcap
     elif command -v pacman >/dev/null 2>&1; then
-        sudo pacman -S --needed --noconfirm cmake gcc
+        sudo pacman -S --needed --noconfirm cmake gcc make libcap
     else
-        echo "No known package manager found. Install cmake and a C++20 compiler manually, then re-run this script." >&2
+        echo "No known package manager found. Install cmake, make, a C++20 compiler, and libcap (for setcap) manually, then re-run this script." >&2
         exit 1
     fi
 fi
